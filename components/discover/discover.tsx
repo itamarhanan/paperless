@@ -15,11 +15,11 @@ import {
 } from "@/components/ui/dialog";
 import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } from "@/components/ui/drawer";
 import { Segmented } from "@/components/reader/segmented";
+import { BookCover } from "@/components/book/book-cover";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import { importDocument, loadSettings } from "@/lib/storage";
 import { aiHeaders } from "@/lib/ai-key";
 import { gutenbergPage, type DiscoverBook, type DiscoverDetails } from "@/lib/discover";
-import { cn } from "@/lib/utils";
 
 type Mode = "search" | "ask";
 
@@ -258,7 +258,11 @@ function BookSection({
               onClick={() => onOpen(book)}
               className="group flex w-full items-center gap-3 py-3 text-left focus-visible:rounded-lg focus-visible:outline-2 focus-visible:outline-ring"
             >
-              <Cover book={book} className="h-16 w-11" />
+              <BookCover
+                title={book.title}
+                image={book.cover}
+                className="h-16 w-11 rounded-[0.3rem] p-1.5 text-[0.4375rem] leading-[1.25]"
+              />
               <span className="min-w-0 flex-1">
                 <span className="line-clamp-2 text-[1.0625rem] font-medium leading-snug">{book.title}</span>
                 <span className="mt-0.5 block truncate text-[0.8125rem] text-muted-foreground">
@@ -284,33 +288,6 @@ function BookSection({
     </section>
   );
 }
-
-function Cover({ book, className }: { book: DiscoverBook; className?: string }) {
-  const [failed, setFailed] = useState(false);
-  return (
-    <span
-      aria-hidden
-      className={cn(
-        "relative flex shrink-0 items-end overflow-hidden rounded-[0.3rem] border bg-surface-raised p-1.5 shadow-xs",
-        className
-      )}
-    >
-      {book.cover && !failed ? (
-        // eslint-disable-next-line @next/next/no-img-element
-        <img
-          src={book.cover}
-          alt=""
-          loading="lazy"
-          onError={() => setFailed(true)}
-          className="absolute inset-0 size-full object-cover"
-        />
-      ) : (
-        <span className="line-clamp-3 font-serif text-[0.4375rem] leading-[1.25] text-muted-foreground">{book.title}</span>
-      )}
-    </span>
-  );
-}
-
 function BookSheet({ book, onClose }: { book: DiscoverBook | null; onClose: () => void }) {
   const desktop = useIsDesktop();
   const open = !!book;
@@ -381,7 +358,11 @@ function BookDetails({ book }: { book: DiscoverBook }) {
   return (
     <article>
       <div className="flex gap-4">
-        <Cover book={book} className="h-36 w-24" />
+        <BookCover
+          title={book.title}
+          image={book.cover}
+          className="h-36 w-24 rounded-[0.3rem] p-1.5 text-[0.4375rem] leading-[1.25]"
+        />
         <div className="min-w-0 pt-1">
           <h2 className="text-[1.375rem] font-semibold leading-tight">{book.title}</h2>
           <p className="mt-1 text-[0.9375rem] text-muted-foreground">{book.authors.join(", ") || "Unknown author"}</p>

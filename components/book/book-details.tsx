@@ -8,6 +8,7 @@ import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
+import { BookCover } from "@/components/book/book-cover";
 import { RenameDialog } from "@/components/library/library-dialogs";
 import {
   getDocument,
@@ -331,15 +332,12 @@ function Overview({
   return (
     <>
       <header className="mt-4 flex items-start gap-4">
-        <div
-          aria-hidden
-          className="relative flex h-28 w-20 shrink-0 items-end overflow-hidden rounded-md border bg-surface-raised p-2 shadow-xs sm:h-32 sm:w-24"
-        >
-          <span className="line-clamp-4 font-serif text-[0.625rem] leading-tight text-muted-foreground">{saved.title}</span>
-          {page > 0 && (
-            <span className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground" style={{ width: `${(page / total) * 100}%` }} />
-          )}
-        </div>
+        <BookCover
+          title={saved.title}
+          progress={page / total}
+          lines={4}
+          className="h-28 w-20 rounded-md p-2 text-[0.625rem] leading-tight sm:h-32 sm:w-24"
+        />
         <div className="min-w-0 flex-1 pt-1">
           <h1 className="text-[1.75rem] font-bold leading-tight tracking-tight text-balance break-words sm:text-[2.125rem]">
             {saved.title}

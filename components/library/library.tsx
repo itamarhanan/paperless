@@ -47,6 +47,7 @@ import {
   type SavedDocument,
 } from "@/lib/storage";
 import { rememberLibrary } from "@/lib/library-cookie";
+import { BookCover } from "@/components/book/book-cover";
 import { removeWithUndo } from "@/lib/remove-with-undo";
 import { timeAgo } from "@/lib/text";
 import { cn } from "@/lib/utils";
@@ -571,20 +572,11 @@ function DocumentRow({
 
   return (
     <li className="group relative flex items-center gap-3 py-3">
-      <div
-        aria-hidden
-        className="relative flex h-14 w-11 shrink-0 items-end overflow-hidden rounded-[0.3rem] border bg-surface-raised p-1.5 shadow-xs"
-      >
-        <span className="line-clamp-3 font-serif text-[0.4375rem] leading-[1.25] text-muted-foreground">
-          {doc.title}
-        </span>
-        {fraction > 0 && (
-          <span
-            className="absolute inset-x-0 bottom-0 h-0.5 bg-foreground"
-            style={{ width: `${fraction * 100}%` }}
-          />
-        )}
-      </div>
+      <BookCover
+        title={doc.title}
+        progress={fraction}
+        className="h-14 w-11 rounded-[0.3rem] p-1.5 text-[0.4375rem] leading-[1.25]"
+      />
       <div className="min-w-0 flex-1">
         <Link
           href={`/reader?id=${encodeURIComponent(doc.id)}`}
