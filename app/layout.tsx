@@ -69,10 +69,8 @@ export const metadata: Metadata = {
     title: "Paperless",
   },
   icons: {
-    icon: [
-      { url: "/icon-light-32x32.png", media: "(prefers-color-scheme: light)" },
-      { url: "/icon-dark-32x32.png", media: "(prefers-color-scheme: dark)" },
-    ],
+    // The SVG follows the tab's light or dark appearance; app/favicon.ico covers older browsers
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     apple: "/apple-icon.png",
   },
 };
