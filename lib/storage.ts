@@ -1,6 +1,6 @@
 import { withDefaults, type ProcessedDocument, type ReaderSettings } from "./pdf-processor";
 import { db } from "./db";
-import { rememberLibrary } from "./home";
+import { rememberLibrary } from "./library-cookie";
 import type { Bookmark, BookSource, ReadingPosition, SavedDocument } from "./db";
 
 export type { Bookmark, BookSource, SavedDocument } from "./db";

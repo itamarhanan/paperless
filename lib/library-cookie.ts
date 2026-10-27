@@ -1,8 +1,3 @@
-/**
- * Which page "/" shows. A first visit gets the landing page; once the library
- * has a book, proxy.ts serves the library there instead. The library itself
- * lives in the browser, so it leaves this cookie for the server to read.
- */
 export const LIBRARY_COOKIE = "paperless-library";
 
 export function rememberLibrary(hasBooks: boolean) {

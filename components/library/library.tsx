@@ -54,7 +54,7 @@ import {
   type Position,
   type SavedDocument,
 } from "@/lib/storage";
-import { rememberLibrary } from "@/lib/home";
+import { rememberLibrary } from "@/lib/library-cookie";
 import { readFile, readGutenberg, readUrl } from "@/lib/import";
 import { cn } from "@/lib/utils";
 import { tourSeen } from "@/lib/tour";
