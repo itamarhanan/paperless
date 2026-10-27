@@ -118,7 +118,6 @@ export function Library() {
   );
 
 
-  // ----- Import -----
   const updateJob = (key: string, patch: Partial<ImportJob>) =>
     setJobs((all) => all.map((j) => (j.key === key ? { ...j, ...patch } : j)));
 
@@ -219,7 +218,6 @@ export function Library() {
 
   useEffect(() => {
     void refresh().then((list) => {
-      // The front page's "Start with Meditations" arrives as /library?sample
       if (!new URLSearchParams(window.location.search).has("sample")) return;
       window.history.replaceState(null, "", "/library");
       startSample(list);
@@ -229,7 +227,6 @@ export function Library() {
     return () => window.removeEventListener(LIBRARY_CHANGED, onChange);
   }, [refresh]);
 
-  // ----- Backup -----
   const backupInput = useRef<HTMLInputElement>(null);
   const backUp = async () => {
     const blob = await exportLibrary();
@@ -250,7 +247,6 @@ export function Library() {
     }
   };
 
-  // ----- Drop anywhere (desktop) -----
   useEffect(() => {
     let depth = 0;
     const hasFiles = (e: DragEvent) => e.dataTransfer?.types.includes("Files");
@@ -286,7 +282,6 @@ export function Library() {
     };
   }, [importFiles]);
 
-  // ----- Delete with undo (feedback.md: no warning when deleting is the expected result) -----
   const remove = async (doc: SavedDocument) => {
     const deleted = await deleteDocument(doc.id);
     setDocs((all) => all?.filter((d) => d.id !== doc.id) ?? null);
@@ -355,7 +350,6 @@ export function Library() {
       </header>
 
       <main className="px-safe mx-auto max-w-3xl pb-[calc(env(safe-area-inset-bottom)+3rem)] sm:px-6">
-        {/* Large title (typography.md: Large Title 34pt bold) */}
         <div className="mb-4 flex items-center justify-between gap-2">
           <h1 className="text-[2.125rem] font-bold leading-tight tracking-tight">
             Library
