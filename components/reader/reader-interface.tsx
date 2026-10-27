@@ -23,7 +23,8 @@ import { usePageCleanup } from "@/hooks/use-page-cleanup";
 import { useLoadBookmarks } from "@/hooks/use-bookmarks";
 import { ReaderPage } from "./reader-page";
 import { BottomBar, ChatAside, PhoneSheets, Sidebar, TopBar } from "./reader-chrome";
-import { ReaderTour, useTour } from "./reader-tour";
+import { ReaderTour } from "./reader-tour";
+import { useTour } from "./reader-tour-store";
 
 type LoadState = "loading" | "ready" | "missing";
 

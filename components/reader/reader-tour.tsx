@@ -1,10 +1,9 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
-import { create } from "zustand";
 import { Button } from "@/components/ui/button";
 import { useReaderStore } from "@/lib/store/reader-store";
-import { markTourSeen } from "@/lib/tour";
+import { useTour } from "./reader-tour-store";
 
 /**
  * A short guided tour of the reader, one control at a time (onboarding.md).
@@ -69,33 +68,6 @@ const STEPS: Step[] = [
     body: () => "Add a PDF, an EPUB or a link in the Library. To see this tour again, choose Show the tour in the More menu.",
   },
 ];
-
-export const TOUR_STEPS = STEPS.length;
-
-interface TourState {
-  /** Index into the steps, or null when no tour is running. */
-  step: number | null;
-  start: () => void;
-  goTo: (step: number) => void;
-  /** Ends the tour. Finishing and skipping both count as seen. */
-  end: () => void;
-}
-
-export const useTour = create<TourState>((set) => ({
-  step: null,
-  start: () => {
-    // Seen once it has shown: a reload or a trip to the library won't bring it back
-    markTourSeen();
-    set({ step: 0 });
-  },
-  goTo: (step) => set({ step: step < STEPS.length ? step : null }),
-  end: () => {
-    markTourSeen();
-    set({ step: null });
-  },
-}));
-
-// ========== LAYOUT ==========
 
 const EDGE = 12;
 const GAP = 12;

@@ -39,7 +39,7 @@ import { AppearanceControls } from "./appearance-controls";
 import { SearchControls } from "./search-controls";
 import { BookmarksList, ContentsList } from "./contents-list";
 import { ChatPanel } from "./chat-panel";
-import { useTour } from "./reader-tour";
+import { useTour } from "./reader-tour-store";
 import { cn } from "@/lib/utils";
 
 // ========== TOP BAR ==========

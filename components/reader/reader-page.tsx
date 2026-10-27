@@ -12,7 +12,7 @@ import { useCleanupStore } from "@/hooks/use-page-cleanup";
 import { pageHasAiChanges, pagePassages, withDefaults, type ProcessedDocument } from "@/lib/pdf-processor";
 import { displayTitle } from "@/lib/text";
 import { escapeRegExp } from "./search-controls";
-import { useTour } from "./reader-tour";
+import { useTour } from "./reader-tour-store";
 
 const FONT_STACKS = {
   serif: "var(--font-reading), Georgia, serif",
