@@ -96,16 +96,17 @@ function readInline(element: Element, keepBreaks: boolean): { text: string; emph
 
 /** A printed contents list: every bit of text is a link to a place in the book. */
 function isContentsLinks(el: Element): boolean {
-  const links = el.querySelectorAll('a[href^="#"]');
+  // In-page anchors (Gutenberg HTML) or links to other chapter files (EPUB)
+  const links = el.querySelectorAll('a[href]:not([href*=":"])');
   if (!links.length) return false;
   const linked = [...links].reduce((n, a) => n + (a.textContent?.trim().length ?? 0), 0);
   const total = el.textContent?.replace(/\s+/g, "").length ?? 0;
   return linked >= total * 0.6;
 }
 
-function collectBlocks(root: Element): Block[] {
+function collectBlocks(root: Element, skipTitleHeading: boolean): Block[] {
   const blocks: Block[] = [];
-  let titleSeen = false;
+  let titleSeen = !skipTitleHeading;
 
   const push = (el: Element, extra: Partial<Block> = {}, keepBreaks = false) => {
     if (isContentsLinks(el)) return;
@@ -159,13 +160,14 @@ function collectBlocks(root: Element): Block[] {
 export function processHtmlBook(
   html: string,
   settings: ReaderSettings,
-  meta: { title: string; language?: string }
+  /** skipTitleHeading: the first h1 is the book's title page (Gutenberg), not a chapter. */
+  meta: { title: string; language?: string; skipTitleHeading?: boolean }
 ): ProcessedDocument {
   const doc = new DOMParser().parseFromString(html, "text/html");
   doc.querySelectorAll(REMOVE).forEach((el) => el.remove());
   // Title-page lines and an emptied contents heading come first, each a heading
   // with no text under it ("By Marcus Aurelius", "BOOKS"). They aren't chapters.
-  const all = collectBlocks(doc.body);
+  const all = collectBlocks(doc.body, meta.skipTitleHeading ?? true);
   let start = 0;
   const nextIsHeading = (i: number) => i + 1 >= all.length || !!all[i + 1].heading;
   while (start < all.length && all[start].heading && nextIsHeading(start)) start++;

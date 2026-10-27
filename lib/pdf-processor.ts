@@ -1,4 +1,5 @@
 import { loadPdfJs } from "./pdf-loader";
+import type { PDFDocumentProxy, PDFPageProxy } from "pdfjs-dist";
 import { displayTitle } from "./text";
 
 export interface ProcessedPage {
@@ -464,7 +465,7 @@ const ITALIC_FONT = /italic|oblique|(?:[-_,]|bold|semibold)it(?![a-z])/i;
 const BOLD_FONT = /bold|black|heavy|semibold|demi(?![a-z]*light)/i;
 
 /** Font names carry the style ("Arial-ItalicMT", "Minion-BoldIt"); pdf.js knows them once fonts load. */
-function fontStyle(page: any, fontName: string, cache: Map<string, number>): number {
+function fontStyle(page: PDFPageProxy, fontName: string, cache: Map<string, number>): number {
   const known = cache.get(fontName);
   if (known !== undefined) return known;
   try {
@@ -478,7 +479,7 @@ function fontStyle(page: any, fontName: string, cache: Map<string, number>): num
   }
 }
 
-async function readLines(page: any, fontCache: Map<string, number>): Promise<Line[]> {
+async function readLines(page: PDFPageProxy, fontCache: Map<string, number>): Promise<Line[]> {
   try {
     await page.getOperatorList(); // loads the page's fonts, so their names are known
   } catch {
@@ -589,13 +590,15 @@ function median(values: number[]): number {
   return sorted[Math.floor(sorted.length / 2)];
 }
 
-async function readOutline(pdf: any): Promise<{ title: string; level: number; pageIndex: number }[]> {
+type OutlineItem = NonNullable<Awaited<ReturnType<PDFDocumentProxy["getOutline"]>>>[number];
+
+async function readOutline(pdf: PDFDocumentProxy): Promise<{ title: string; level: number; pageIndex: number }[]> {
   try {
     const outline = await pdf.getOutline();
     if (!outline?.length) return [];
     const result: { title: string; level: number; pageIndex: number }[] = [];
 
-    const walk = async (items: any[], level: number) => {
+    const walk = async (items: OutlineItem[], level: number) => {
       for (const item of items) {
         if (result.length >= 200) return;
         try {
@@ -620,7 +623,7 @@ async function readOutline(pdf: any): Promise<{ title: string; level: number; pa
   }
 }
 
-function titleFromMetadata(info: any): string | null {
+function titleFromMetadata(info: { Title?: unknown } | undefined): string | null {
   const raw = typeof info?.Title === "string" ? normalizeLine(info.Title) : "";
   if (raw.length < 3) return null;
   if (/^(untitled|microsoft word|document\d*|about:|https?:\/\/|file:)/i.test(raw)) return null;
@@ -654,6 +657,14 @@ async function extractAndCleanPdfText(
     pageLines.push(await readLines(page, fontCache));
     page.cleanup?.();
     onProgress?.((n / pdf.numPages) * 0.9);
+  }
+
+  // A scan is pictures of pages: little or no text layer behind them
+  const letters = pageLines.reduce((n, lines) => n + lines.reduce((m, l) => m + l.text.length, 0), 0);
+  if (letters < pdf.numPages * 40) {
+    throw new Error(
+      "This PDF is scanned pages without text, so there’s nothing to read here yet. Try a version with selectable text."
+    );
   }
 
   // Running headers and footers: lines at a page's top or bottom edge that repeat
@@ -861,8 +872,9 @@ async function extractAndCleanPdfText(
   let language: string | undefined;
   try {
     const meta = await pdf.getMetadata();
-    title = titleFromMetadata(meta?.info) ?? title;
-    const lang = String(meta?.info?.Language ?? "").trim();
+    const info = meta?.info as { Title?: unknown; Language?: unknown } | undefined;
+    title = titleFromMetadata(info) ?? title;
+    const lang = String(info?.Language ?? "").trim();
     if (/^[a-z]{2,3}(-[a-z0-9]{2,8})*$/i.test(lang)) language = lang;
   } catch {
     // Metadata is optional
@@ -967,72 +979,13 @@ export function findExtras(
 
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
-export async function processClientPdf(
-  file: File,
+/** Reads a PDF's text, structure and contents into a document. */
+export function processPdf(
+  data: ArrayBuffer,
   settings: ReaderSettings = DEFAULT_SETTINGS,
-  onProgress?: ProgressCallback
+  options: { fallbackTitle?: string; onProgress?: ProgressCallback } = {}
 ): Promise<ProcessedDocument> {
-  if (file.size > MAX_FILE_BYTES) {
-    throw new Error("This file is larger than 50 MB. Try a smaller file.");
-  }
-
-  const isEpub = file.name.toLowerCase().endsWith(".epub") || file.type === "application/epub+zip";
-  const fallbackTitle = titleFromFilename(file.name);
-
-  if (isEpub) {
-    const formData = new FormData();
-    formData.append("file", file);
-    onProgress?.(0.05);
-    const response = await fetch("/api/process-pdf", { method: "POST", body: formData });
-    if (!response.ok) throw new Error(await errorMessage(response, "Couldn't convert this EPUB."));
-    const buffer = await response.arrayBuffer();
-    const doc = await extractAndCleanPdfText(buffer, settings, {
-      fallbackTitle,
-      onProgress: (f) => onProgress?.(0.3 + f * 0.7),
-    });
-    // EPUB conversion loses metadata, so the file name is the better title
-    return { ...doc, title: fallbackTitle };
-  }
-
-  const buffer = await file.arrayBuffer();
-  return extractAndCleanPdfText(buffer, settings, { fallbackTitle, onProgress });
-}
-
-export async function processPdfUrl(
-  url: string,
-  settings: ReaderSettings = DEFAULT_SETTINGS,
-  onProgress?: ProgressCallback
-): Promise<ProcessedDocument> {
-  onProgress?.(0.05);
-  const response = await fetch("/api/process-pdf", {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ url }),
-  });
-  if (!response.ok) throw new Error(await errorMessage(response, "Couldn't download that PDF."));
-
-  const buffer = await response.arrayBuffer();
-  let fallbackTitle = "Untitled";
-  try {
-    const name = decodeURIComponent(new URL(url).pathname.split("/").pop() ?? "");
-    if (name) fallbackTitle = titleFromFilename(name);
-  } catch {
-    // Keep the default title
-  }
-  return extractAndCleanPdfText(buffer, settings, {
-    fallbackTitle,
-    onProgress: (f) => onProgress?.(0.3 + f * 0.7),
-  });
-}
-
-async function errorMessage(response: Response, fallback: string): Promise<string> {
-  try {
-    const data = await response.json();
-    if (typeof data?.error === "string") return data.error;
-  } catch {
-    // Not JSON
-  }
-  return fallback;
+  return extractAndCleanPdfText(data, settings, options);
 }
 
 /**

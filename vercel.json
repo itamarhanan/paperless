@@ -1,8 +1,8 @@
 {
   "functions": {
-    "app/api/process-pdf/route.ts": {
-      "memory": 2048,
-      "maxDuration": 15
+    "app/api/fetch-document/route.ts": {
+      "memory": 1024,
+      "maxDuration": 30
     }
   }
 }

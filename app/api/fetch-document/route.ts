@@ -1,19 +1,14 @@
 export const runtime = "nodejs";
-export const maxDuration = 60;
+export const maxDuration = 30;
 
 import { NextRequest, NextResponse } from "next/server";
 import { isIP } from "node:net";
 import { lookup } from "node:dns/promises";
-import { epubToPdf } from "@/lib/epub";
+import { USER_AGENT } from "@/lib/site";
 
 const MAX_BYTES = 50 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 20000;
-
-function isEpub(contentType?: string | null, filename?: string) {
-  return Boolean(
-    contentType?.includes("application/epub+zip") || filename?.toLowerCase().split("?")[0].endsWith(".epub")
-  );
-}
+const MAX_REDIRECTS = 5;
 
 function fail(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -85,9 +80,28 @@ async function readCapped(response: Response): Promise<ArrayBuffer | null> {
   return out.buffer;
 }
 
-async function respond(buffer: ArrayBuffer, epub: boolean) {
-  const body = epub ? new Uint8Array(await epubToPdf(buffer)) : buffer;
-  return new NextResponse(body, { headers: { "Content-Type": "application/pdf" } });
+/**
+ * Follows redirects by hand so every hop is checked: file hosts (Internet
+ * Archive, Dropbox, Drive) redirect to their storage servers, and a redirect
+ * must not lead into a private network.
+ */
+async function fetchFollowing(start: URL): Promise<Response | string | null> {
+  let url = start;
+  const signal = AbortSignal.timeout(FETCH_TIMEOUT_MS);
+  for (let hop = 0; hop <= MAX_REDIRECTS; hop++) {
+    const response = await fetch(url, {
+      redirect: "manual",
+      signal,
+      headers: { Accept: "application/pdf, application/epub+zip;q=0.9, */*;q=0.1", "User-Agent": USER_AGENT },
+    }).catch(() => null);
+    if (!response) return null;
+    const location = response.headers.get("location");
+    if (response.status < 300 || response.status >= 400 || !location) return response;
+    const next = await validateUrl(new URL(location, url).href);
+    if (typeof next === "string") return next;
+    url = next;
+  }
+  return "That link redirects too many times.";
 }
 
 export async function POST(request: NextRequest) {
@@ -99,36 +113,28 @@ export async function POST(request: NextRequest) {
       const url = await validateUrl(raw);
       if (typeof url === "string") return fail(url, 400);
 
-      const response = await fetch(url, {
-        redirect: "error",
-        signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
-        headers: { Accept: "application/pdf, application/epub+zip;q=0.9, */*;q=0.1" },
-      }).catch(() => null);
+      const response = await fetchFollowing(url);
+      if (typeof response === "string") return fail(response, 400);
       if (!response) return fail("Couldn't download that file. Check the link and try again.", 502);
       if (!response.ok) return fail(`The website answered with an error (${response.status}).`, 502);
 
       const buffer = await readCapped(response);
       if (!buffer) return fail("This file is larger than 50 MB.", 413);
 
-      const type = response.headers.get("content-type");
-      const epub = isEpub(type, url.pathname);
-      const looksLikePdf = new TextDecoder().decode(new Uint8Array(buffer.slice(0, 5))) === "%PDF-";
-      if (!epub && !looksLikePdf) return fail("That link isn't a PDF or EPUB file.", 415);
+      // Judge by the bytes: servers often send PDFs and EPUBs as octet-stream
+      const head = new Uint8Array(buffer.slice(0, 5));
+      const isPdf = new TextDecoder().decode(head) === "%PDF-";
+      const isZip = head[0] === 0x50 && head[1] === 0x4b; // "PK": an EPUB is a zip
+      if (!isPdf && !isZip) return fail("That link isn't a PDF or EPUB file.", 415);
 
-      return respond(buffer, epub);
-    }
-
-    if (contentType?.includes("multipart/form-data")) {
-      const formData = await request.formData();
-      const file = formData.get("file");
-      if (!(file instanceof File)) return fail("Choose a file to upload.", 400);
-      if (file.size > MAX_BYTES) return fail("This file is larger than 50 MB.", 413);
-      return respond(await file.arrayBuffer(), isEpub(file.type, file.name));
+      return new NextResponse(buffer, {
+        headers: { "Content-Type": isPdf ? "application/pdf" : "application/epub+zip" },
+      });
     }
 
     return fail("Unsupported request.", 400);
   } catch (error) {
-    console.error("[process-pdf]", error);
-    return fail("Couldn't convert this file.", 500);
+    console.error("[fetch-document]", error);
+    return fail("Couldn't download that file.", 500);
   }
 }

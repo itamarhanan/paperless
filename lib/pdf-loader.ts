@@ -1,4 +1,4 @@
-let pdfjsLib: any = null;
+let pdfjsLib: typeof import("pdfjs-dist") | null = null;
 
 export async function loadPdfJs() {
   // Return cached instance if already loaded
