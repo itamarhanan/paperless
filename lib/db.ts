@@ -12,11 +12,18 @@ export interface Bookmark {
   createdAt: string;
 }
 
+/** Where a book came from. Books added before this was recorded have none. */
+export type BookSource =
+  | { kind: "file"; name: string }
+  | { kind: "link"; url: string }
+  | { kind: "gutenberg"; id: number };
+
 export interface SavedDocument {
   id: string;
   title: string;
   savedAt: string;
   lastOpenedAt?: string;
+  source?: BookSource;
   document: ProcessedDocument;
 }
 

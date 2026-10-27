@@ -368,7 +368,7 @@ function BookDetails({ book }: { book: DiscoverBook }) {
     setAdding("adding");
     try {
       const doc = await readGutenberg(book.gutenbergId, book.title, await loadSettings());
-      const id = await importDocument(doc);
+      const id = await importDocument(doc, { kind: "gutenberg", id: book.gutenbergId });
       router.push(`/reader?id=${encodeURIComponent(id)}`);
     } catch (error) {
       setAddError((error as Error).message);

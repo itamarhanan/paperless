@@ -1,8 +1,8 @@
 import { withDefaults, type ProcessedDocument, type ReaderSettings } from "./pdf-processor";
 import { db } from "./db";
-import type { Bookmark, ReadingPosition, SavedDocument } from "./db";
+import type { Bookmark, BookSource, ReadingPosition, SavedDocument } from "./db";
 
-export type { Bookmark, SavedDocument } from "./db";
+export type { Bookmark, BookSource, SavedDocument } from "./db";
 
 const LAST_DOC_KEY = "paperless:lastDocId";
 const isBrowser = () => typeof window !== "undefined";
@@ -10,10 +10,10 @@ const isBrowser = () => typeof window !== "undefined";
 // ========== DOCUMENTS ==========
 
 /** Stores a freshly imported document and returns its id. */
-export async function importDocument(document: ProcessedDocument): Promise<string> {
+export async function importDocument(document: ProcessedDocument, source?: BookSource): Promise<string> {
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
-  await db.savedDocuments.put({ id, title: document.title, savedAt: now, lastOpenedAt: now, document });
+  await db.savedDocuments.put({ id, title: document.title, savedAt: now, lastOpenedAt: now, source, document });
   void keepStorage();
   return id;
 }
