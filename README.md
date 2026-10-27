@@ -58,6 +58,8 @@ The end-to-end tests make their own books (a PDF printed by the browser, an EPUB
 | `lib/ai-access.ts` | Which key pays for an AI request, and the limits |
 | `components/reader` | The reader: page, toolbars, contents, search, appearance, chat |
 | `app/api` | Downloading linked files, Gutenberg books and Open Library data, and the AI routes |
+| `app/(site)`, `proxy.ts` | The front page and the public pages; `/` shows the library instead once you have a book |
+| `docs/brand` | The app icon sources. The mark is a page with its corner lifting, like the reader's page turn |
 
 Built with Next.js, React, Tailwind CSS, Radix, pdf.js, Dexie and the AI SDK (Gemini and Groq). The interface follows Apple's Human Interface Guidelines, translated to the web: toolbars that step aside while you read, 44-point touch targets, sheets on phones and panels on desktop, and AI that says what it did.
 
