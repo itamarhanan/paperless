@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import dynamic from "next/dynamic";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import {
@@ -38,11 +39,11 @@ import { pageHasAiChanges, pagePassages } from "@/lib/pdf-processor";
 import { AppearanceControls } from "./appearance-controls";
 import { SearchControls } from "./search-controls";
 import { BookmarksList, ContentsList } from "./contents-list";
-import { ChatPanel } from "./chat-panel";
 import { useTour } from "./reader-tour-store";
 import { cn } from "@/lib/utils";
 
-// ========== TOP BAR ==========
+const ChatPanel = dynamic(() => import("./chat-panel").then((module) => module.ChatPanel));
+
 
 /** "The Obstacle Is the Way: The Timeless Art of…" → "The Obstacle Is the Way" */
 function shortTitle(title: string) {
@@ -378,7 +379,7 @@ export function PhoneSheets() {
         <DrawerContent className="h-[92dvh]">
           <SheetHeader title={`Ask about page ${currentPage}`} onDone={() => setChatOpen(false)} />
           <div className="pb-safe min-h-0 flex-1">
-            <ChatPanel />
+            {chatOpen && <ChatPanel />}
           </div>
         </DrawerContent>
       </Drawer>

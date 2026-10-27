@@ -21,10 +21,12 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useHidingChrome } from "@/hooks/use-hiding-chrome";
 import { usePageCleanup } from "@/hooks/use-page-cleanup";
 import { useLoadBookmarks } from "@/hooks/use-bookmarks";
+import dynamic from "next/dynamic";
 import { ReaderPage } from "./reader-page";
 import { BottomBar, ChatAside, PhoneSheets, Sidebar, TopBar } from "./reader-chrome";
-import { ReaderTour } from "./reader-tour";
 import { useTour } from "./reader-tour-store";
+
+const ReaderTour = dynamic(() => import("./reader-tour").then((module) => module.ReaderTour));
 
 type LoadState = "loading" | "ready" | "missing";
 
@@ -259,7 +261,7 @@ export function ReaderInterface() {
         </>
       )}
 
-      <ReaderTour desktop={desktop} />
+      {touring && <ReaderTour desktop={desktop} />}
     </div>
   );
 }
