@@ -1,0 +1,4 @@
+# Vercel CLI deploys upload the working directory and do not read .gitignore.
+# Keep local env files out of the upload; production values live in the Vercel dashboard.
+.env*
+!.env.example
