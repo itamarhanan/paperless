@@ -43,7 +43,7 @@ export const viewport: Viewport = {
 };
 
 const DESCRIPTION =
-  "A quiet reader for PDFs and EPUBs. Books become clean, comfortable pages on your phone and desktop, and AI tidies the layout without ever changing the words.";
+  "Read PDFs and EPUBs as pages sized for your screen. Paperless keeps the book's text and structure, and stores your library in your browser.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
