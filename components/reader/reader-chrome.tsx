@@ -8,6 +8,7 @@ import {
   Bookmark,
   BookmarkCheck,
   ChevronLeft,
+  CircleHelp,
   Copy,
   Ellipsis,
   Info,
@@ -38,6 +39,7 @@ import { AppearanceControls } from "./appearance-controls";
 import { SearchControls } from "./search-controls";
 import { BookmarksList, ContentsList } from "./contents-list";
 import { ChatPanel } from "./chat-panel";
+import { useTour } from "./reader-tour";
 import { cn } from "@/lib/utils";
 
 // ========== TOP BAR ==========
@@ -76,6 +78,7 @@ export function TopBar({
 
   return (
     <header
+      data-reader-bar="top"
       className={cn(
         "bar-glass pt-safe sticky top-0 z-40 border-b transition-transform duration-200 ease-out",
         hidden && "-translate-y-full"
@@ -83,7 +86,7 @@ export function TopBar({
     >
       <div className="px-safe flex h-12 items-center gap-1 lg:h-13">
         <Button asChild variant="ghost" className="-ml-2 gap-0.5 px-2 has-[>svg]:px-2">
-          <Link href="/library" aria-label="Back to library">
+          <Link href="/library" aria-label="Back to library" data-tour="library">
             <ChevronLeft className="size-5" />
             <span className="max-[359px]:sr-only">Library</span>
           </Link>
@@ -95,6 +98,7 @@ export function TopBar({
             size="icon"
             aria-label={sidebarOpen ? "Hide sidebar" : "Show sidebar"}
             aria-pressed={sidebarOpen}
+            data-tour="contents"
             onClick={() => setSidebarOpen(!sidebarOpen)}
           >
             <PanelLeft />
@@ -123,7 +127,7 @@ export function TopBar({
 
             <Popover {...popover("appearance")}>
               <PopoverTrigger asChild>
-                <Button variant="ghost" size="icon" aria-label="Appearance">
+                <Button variant="ghost" size="icon" aria-label="Appearance" data-tour="appearance">
                   <ALargeSmall />
                 </Button>
               </PopoverTrigger>
@@ -182,6 +186,7 @@ function MoreMenu({ onCleanNow }: { onCleanNow: (page: number) => void }) {
   const showOriginal = useReaderStore((s) => !!s.showOriginal[s.currentPage]);
   const setShowOriginal = useReaderStore((s) => s.setShowOriginal);
   const page = document.pages[currentPage - 1];
+  const startTour = useTour((s) => s.start);
 
   // The AI only lays text out, so the page's own text is always the one to copy
   const aiTouched = !!page?.isEnhanced && (pageHasAiChanges(document, page) || pagePassages(document, page).length > 0);
@@ -233,6 +238,9 @@ function MoreMenu({ onCleanNow }: { onCleanNow: (page: number) => void }) {
             </Link>
           </DropdownMenuItem>
         )}
+        <DropdownMenuItem onSelect={startTour}>
+          <CircleHelp /> Show the tour
+        </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onSelect={remove}>
           <Trash2 /> Remove from library
@@ -259,6 +267,7 @@ export function BottomBar({ hidden }: { hidden: boolean }) {
   return (
     <nav
       aria-label="Reader tools"
+      data-reader-bar="bottom"
       className={cn(
         "bar-glass pb-safe fixed inset-x-0 bottom-0 z-40 border-t transition-transform duration-200 ease-out",
         hidden && "translate-y-full"
@@ -271,6 +280,7 @@ export function BottomBar({ hidden }: { hidden: boolean }) {
             type="button"
             aria-label={label}
             aria-expanded={panel === key}
+            data-tour={key}
             onClick={onClick}
             className="mx-auto flex size-11 items-center justify-center rounded-full text-foreground transition-colors active:bg-accent focus-visible:outline-2 focus-visible:outline-ring"
           >

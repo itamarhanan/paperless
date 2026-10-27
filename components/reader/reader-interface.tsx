@@ -23,6 +23,7 @@ import { usePageCleanup } from "@/hooks/use-page-cleanup";
 import { useLoadBookmarks } from "@/hooks/use-bookmarks";
 import { ReaderPage } from "./reader-page";
 import { BottomBar, ChatAside, PhoneSheets, Sidebar, TopBar } from "./reader-chrome";
+import { ReaderTour, useTour } from "./reader-tour";
 
 type LoadState = "loading" | "ready" | "missing";
 
@@ -41,11 +42,15 @@ export function ReaderInterface() {
   const sidebarOpen = useReaderStore((s) => s.sidebarOpen);
   const chatOpen = useReaderStore((s) => s.chatOpen);
   const panel = useReaderStore((s) => s.panel);
+  const touring = useTour((s) => s.step !== null);
+  const startTour = useTour((s) => s.start);
+  const tourAsked = params.get("tour") === "1";
 
   const desktop = useIsDesktop();
   // Zen reading: toolbars step aside on every screen while the text is all there is.
   // With the sidebar or chat open on desktop, they stay so their tops line up.
-  const chrome = useHidingChrome(!panel && !chatOpen && !(desktop && sidebarOpen));
+  // The tour points at the toolbars, so they stay while it runs.
+  const chrome = useHidingChrome(!panel && !chatOpen && !(desktop && sidebarOpen) && !touring);
 
   // The sidebar opens only if the reader opened it last time
   useEffect(() => {
@@ -79,6 +84,8 @@ export function ReaderInterface() {
       const requested = Number.isInteger(asked) && asked >= 1 ? asked : null;
 
       setState("loading");
+      // A tour left running on another book doesn't follow the reader here
+      useTour.setState({ step: null });
       const [saved, savedSettings, position] = await Promise.all([
         getDocument(id),
         loadSettings(),
@@ -110,6 +117,14 @@ export function ReaderInterface() {
       cancelled = true;
     };
   }, [id, router]);
+
+  // ----- Guided tour: once, from the library's sample (?tour=1) -----
+  useEffect(() => {
+    if (state !== "ready" || !tourAsked || !id) return;
+    startTour();
+    // Drop it from the address, so a reload doesn't start it again
+    router.replace(`/reader?id=${encodeURIComponent(id)}`, { scroll: false });
+  }, [state, tourAsked, id, router, startTour]);
 
   useEffect(() => {
     if (document?.title) window.document.title = `${document.title} · Paperless`;
@@ -242,6 +257,8 @@ export function ReaderInterface() {
           <PhoneSheets />
         </>
       )}
+
+      <ReaderTour desktop={desktop} />
     </div>
   );
 }

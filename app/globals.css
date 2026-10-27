@@ -246,6 +246,13 @@
     }
   }
 
+  /* The control the reader tour points at: a ring with a soft halo, nothing dimmed */
+  .tour-ring {
+    outline: 2px solid var(--foreground);
+    outline-offset: 0;
+    box-shadow: 0 0 0 6px color-mix(in srgb, var(--foreground) 14%, transparent);
+  }
+
   /* Reading surface. Size, leading, measure and alignment come from settings. */
   .reader-prose {
     font-family: var(--reader-font, var(--font-reading));

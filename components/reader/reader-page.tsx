@@ -12,6 +12,7 @@ import { useCleanupStore } from "@/hooks/use-page-cleanup";
 import { pageHasAiChanges, pagePassages, withDefaults, type ProcessedDocument } from "@/lib/pdf-processor";
 import { displayTitle } from "@/lib/text";
 import { escapeRegExp } from "./search-controls";
+import { useTour } from "./reader-tour";
 
 const FONT_STACKS = {
   serif: "var(--font-reading), Georgia, serif",
@@ -145,6 +146,8 @@ export function ReaderPage({ onCleanNow }: { onCleanNow: (page: number) => void 
   const setSearchQuery = useReaderStore((s) => s.setSearchQuery);
   const cleanup = useCleanupStore((s) => s.status[currentPage]);
   const paused = useCleanupStore((s) => s.paused);
+  // The tidied-layout pill waits for the tour to end; both would sit at the bottom
+  const touring = useTour((s) => s.step !== null);
 
   const page = document.pages[currentPage - 1];
   const total = document.totalPages;
@@ -254,7 +257,7 @@ export function ReaderPage({ onCleanNow }: { onCleanNow: (page: number) => void 
         />
       </div>
 
-      {pendingSwap && !showOriginal && (
+      {pendingSwap && !showOriginal && !touring && (
         <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5rem)] z-30 flex justify-center lg:bottom-8">
           <button
             type="button"
@@ -366,6 +369,7 @@ function PageTurn({
       {!isLast ? (
         <button
           type="button"
+          data-tour="next-page"
           onClick={onNext}
           className="group flex w-full items-center justify-between gap-4 rounded-xl bg-primary px-5 py-4 text-left text-primary-foreground transition-opacity hover:opacity-90 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-ring"
         >
