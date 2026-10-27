@@ -70,6 +70,8 @@ interface ImportJob {
 
 const ACCEPT = ".pdf,.epub,application/pdf,application/epub+zip";
 
+const SAMPLE = { id: 2680, title: "Meditations" };
+
 function progressOf(doc: SavedDocument, position?: Position) {
   const total = doc.document.totalPages || 1;
   const page = Math.min(position?.page ?? 0, total);
@@ -716,8 +718,6 @@ function EmptyLibrary({
     </section>
   );
 }
-
-const SAMPLE = { id: 2680, title: "Meditations" };
 
 const HINT_KEY = "paperless:home-screen-hint";
 

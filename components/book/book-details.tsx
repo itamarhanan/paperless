@@ -66,6 +66,11 @@ const CHANGE_LABELS: [ChangeKind, string][] = [
 
 const PREVIEW_ROWS = 8;
 
+const rowBase = "flex min-h-11 w-full items-center gap-3 px-4 py-2.5 text-left text-[1.0625rem] pointer-fine:text-[0.9375rem]";
+const rowInteractive =
+  "transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
+const rowAction = cn(rowBase, rowInteractive, "font-medium");
+
 export function BookDetails() {
   const router = useRouter();
   const params = useSearchParams();
@@ -215,11 +220,6 @@ export function BookDetails() {
   );
 }
 
-
-const rowBase = "flex min-h-11 w-full items-center gap-3 px-4 py-2.5 text-left text-[1.0625rem] pointer-fine:text-[0.9375rem]";
-const rowInteractive =
-  "transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-ring";
-const rowAction = cn(rowBase, rowInteractive, "font-medium");
 
 function Group({
   title,
