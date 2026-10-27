@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton, SkeletonRow } from "@/components/ui/skeleton";
+import { ProgressBar } from "@/components/ui/progress-bar";
 import { SearchField } from "@/components/ui/search-field";
 import {
   exportLibrary,
@@ -384,14 +385,11 @@ export function Library() {
                   {resume.doc.title}
                 </span>
                 <span className="mt-4 flex items-center gap-3">
-                  <span className="h-1 flex-1 overflow-hidden rounded-full bg-primary-foreground/25">
-                    <span
-                      className="block h-full rounded-full bg-primary-foreground"
-                      style={{
-                        width: `${Math.max(2, resume.fraction * 100)}%`,
-                      }}
-                    />
-                  </span>
+                  <ProgressBar
+                    value={Math.max(2, resume.fraction * 100)}
+                    className="bg-primary-foreground/25"
+                    fillClassName="bg-primary-foreground"
+                  />
                   <span className="tabular text-[0.8125rem] opacity-80">
                     Page {resume.page} of {resume.total}
                   </span>
@@ -638,19 +636,12 @@ function ImportRow({
           <p className="text-[0.8125rem] text-destructive">{job.error}</p>
         ) : (
           <div className="mt-1.5 flex items-center gap-3">
-            <div
-              className="h-1 flex-1 overflow-hidden rounded-full bg-muted"
-              role="progressbar"
-              aria-label={`Adding ${job.name}`}
-              aria-valuemin={0}
-              aria-valuemax={100}
-              aria-valuenow={percent}
-            >
-              <div
-                className="h-full bg-foreground transition-[width] duration-200"
-                style={{ width: `${percent}%` }}
-              />
-            </div>
+            <ProgressBar
+              value={percent}
+              label={`Adding ${job.name}`}
+              className="bg-muted"
+              fillClassName="bg-foreground"
+            />
             <span className="tabular w-16 text-right text-[0.8125rem] text-muted-foreground">
               {percent < 100 ? `Reading ${percent}%` : "Saving"}
             </span>
