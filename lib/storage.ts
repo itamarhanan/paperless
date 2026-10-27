@@ -8,7 +8,6 @@ export type { Bookmark, BookSource, SavedDocument } from "./db";
 const LAST_DOC_KEY = "paperless:lastDocId";
 const isBrowser = () => typeof window !== "undefined";
 
-// ========== DOCUMENTS ==========
 
 /** Stores a freshly imported document and returns its id. */
 export async function importDocument(document: ProcessedDocument, source?: BookSource): Promise<string> {
@@ -125,7 +124,6 @@ function clearLastDocumentId() {
   }
 }
 
-// ========== SETTINGS (shared across documents) ==========
 
 export async function saveSettings(settings: ReaderSettings): Promise<void> {
   if (!isBrowser()) return;
@@ -142,7 +140,6 @@ export async function loadSettings(): Promise<ReaderSettings> {
   }
 }
 
-// ========== READING POSITION (per document) ==========
 
 export interface Position {
   page: number;
@@ -164,7 +161,6 @@ export async function loadAllPositions(): Promise<Map<string, Position>> {
   return new Map(rows.map((r) => [r.id, { page: r.page, scrollPosition: r.scrollPosition }]));
 }
 
-// ========== BOOKMARKS (per document) ==========
 
 export async function loadBookmarks(docId: string): Promise<Bookmark[]> {
   const rows = await db.bookmarks.where("docId").equals(docId).toArray();
@@ -192,7 +188,6 @@ export async function restoreBookmark(bookmark: Bookmark): Promise<void> {
   await db.bookmarks.put(bookmark);
 }
 
-// ========== BACKUP ==========
 
 const BACKUP_FORMAT = "paperless-library";
 
