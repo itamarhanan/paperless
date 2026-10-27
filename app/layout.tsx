@@ -4,6 +4,7 @@ import { Inter, Literata, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { ServiceWorker } from "@/components/providers/service-worker";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -88,6 +89,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
           />
         </ThemeProvider>
         <Analytics />
+        <ServiceWorker />
       </body>
     </html>
   );
