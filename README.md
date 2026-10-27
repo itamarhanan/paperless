@@ -9,6 +9,8 @@
 
   <img src="docs/hero.png" alt="Meditations open in Paperless, on a phone and on a desktop" width="700">
 
+  <a href="https://github.com/itamarhanan/paperless/actions/workflows/ci.yml"><img src="https://github.com/itamarhanan/paperless/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="https://nextjs.org"><img src="https://img.shields.io/badge/Next.js-16-black?logo=nextdotjs" alt="Next.js 16"></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue" alt="MIT license"></a>
   <a href="https://www.playwright.dev"><img src="https://img.shields.io/badge/tested%20with-Playwright-2EAD33?logo=playwright&logoColor=white" alt="Tested with Playwright"></a>
   <img src="https://img.shields.io/badge/works-offline-blueviolet" alt="Works offline">
@@ -18,6 +20,8 @@
 
 > [!NOTE]
 > Your books stay in your browser. Nothing is uploaded, there are no accounts, and a backup is one file you own.
+
+[Why](#why) · [Features](#features) · [How the AI stays honest](#how-the-ai-stays-honest) · [Running it](#running-it) · [Tests](#tests) · [Layout](#layout)
 
 ## Why
 
@@ -68,10 +72,15 @@ The suite runs against the production build, like CI. The tests make their own b
 | `lib/epub-processor.ts` | EPUB to one HTML book, with chapter titles from its own contents |
 | `lib/import.ts` | Every way a book gets into the library |
 | `hooks/use-page-cleanup.ts` | The background AI page check, and the checks on its answers |
+| `lib/storage.ts`, `lib/db.ts` | The IndexedDB library: books, settings, reading positions and bookmarks |
+| `lib/discover.ts` | Open Library and Gutenberg search, and the check that a suggested book exists |
 | `lib/ai-access.ts` | Which key pays for an AI request, and the limits |
+| `lib/store/reader-store.ts` | The reader's shared state: open panel, document, AI page labels |
+| `hooks/` | Reader behavior: bookmarks, keyboard shortcuts, toolbars that hide while you read |
 | `components/reader` | The reader: page, toolbars, contents, search, appearance, chat |
 | `app/api` | Downloading linked files, Gutenberg books and Open Library data, and the AI routes |
 | `app/(site)`, `proxy.ts` | The public pages; `/` shows the library after you add a book |
+| `tests/` | Playwright specs, plus fixtures that build their own PDF, EPUB and Gutenberg books |
 | `docs/brand` | Sources of the app icon: a page with its corner lifting, like the reader's page turn |
 
 Built with Next.js, React, Tailwind CSS, Radix, pdf.js, Dexie and the AI SDK with Gemini and Groq.
