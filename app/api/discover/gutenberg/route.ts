@@ -1,4 +1,5 @@
 import { gutenbergHtml } from "@/lib/discover";
+import { USER_AGENT } from "@/lib/site";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -15,7 +16,7 @@ export async function GET(req: Request) {
 
   try {
     const response = await fetch(gutenbergHtml(Number(id)), {
-      headers: { "User-Agent": "Paperless reader (personal use)" },
+      headers: { "User-Agent": USER_AGENT },
       signal: AbortSignal.timeout(30000),
     });
     if (!response.ok) {

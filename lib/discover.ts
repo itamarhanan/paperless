@@ -1,3 +1,5 @@
+import { USER_AGENT } from "./site";
+
 /** A book found through Discover, from Open Library or Project Gutenberg. */
 export interface DiscoverBook {
   /** "ol:/works/OL123W" or "pg:2680" */
@@ -24,7 +26,7 @@ export interface DiscoverDetails {
 
 const OPEN_LIBRARY = "https://openlibrary.org";
 const GUTENBERG = "https://www.gutenberg.org";
-const HEADERS = { "User-Agent": "Paperless reader (personal use)", Accept: "application/json" };
+const HEADERS = { "User-Agent": USER_AGENT, Accept: "application/json" };
 const TIMEOUT_MS = 9000;
 
 async function fetchWithTimeout(url: string, accept = "application/json") {
