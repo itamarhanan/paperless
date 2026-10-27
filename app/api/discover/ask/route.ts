@@ -1,7 +1,7 @@
 import { generateText, Output } from "ai";
 import { z } from "zod";
 import { aiAccess } from "@/lib/ai-access";
-import { findOnOpenLibrary, normalize, searchGutenberg, type DiscoverBook } from "@/lib/discover";
+import { resolveSuggestion, type DiscoverBook } from "@/lib/discover";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -10,6 +10,7 @@ export const maxDuration = 60;
 // Override with DISCOVER_MODEL.
 const MODEL = process.env.DISCOVER_MODEL || "gemini-2.5-flash";
 const MAX_SUGGESTIONS = 8;
+const LOOKUP_BUDGET_MS = 12_000;
 
 const suggestionsSchema = z.object({
   books: z
@@ -64,24 +65,13 @@ For each: the exact title as published (without subtitle), the author's name, an
     return Response.json({ error: "The AI couldn't suggest books right now. Try again." }, { status: 502 });
   }
 
+  // Lookups share a few connections to Open Library; on a slow day, a book
+  // still unconfirmed after this long is left out rather than holding the rest
+  const lookupDeadline = new Promise<null>((resolve) => setTimeout(() => resolve(null), LOOKUP_BUDGET_MS));
   const resolved = await Promise.all(
-    suggestions.slice(0, MAX_SUGGESTIONS).map(async (s): Promise<DiscoverBook | null> => {
-      try {
-        const book = await findOnOpenLibrary(s.title, s.author);
-        if (!book) return null;
-        let { gutenbergId } = book;
-        // Classics are often free on Gutenberg even when the edition Open Library
-        // matched is a modern one. Only a matching title counts.
-        if (!gutenbergId) {
-          const wanted = normalize(s.title);
-          const free = await searchGutenberg(`${s.title} ${s.author.split(" ").pop()}`).catch(() => []);
-          gutenbergId = free.find((f) => normalize(f.title).startsWith(wanted))?.gutenbergId;
-        }
-        return { ...book, gutenbergId, reason: s.reason };
-      } catch {
-        return null;
-      }
-    })
+    suggestions
+      .slice(0, MAX_SUGGESTIONS)
+      .map((s) => Promise.race([resolveSuggestion(s).catch(() => null), lookupDeadline]))
   );
 
   const seen = new Set<string>();
