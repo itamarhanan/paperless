@@ -14,7 +14,22 @@ export async function importDocument(document: ProcessedDocument): Promise<strin
   const id = crypto.randomUUID();
   const now = new Date().toISOString();
   await db.savedDocuments.put({ id, title: document.title, savedAt: now, lastOpenedAt: now, document });
+  void keepStorage();
   return id;
+}
+
+/**
+ * Asks the browser not to clear the library when space runs low or the site
+ * goes unvisited. Chrome and Firefox grant it to sites people use; Safari
+ * keeps data for sites added to the Home Screen.
+ */
+export async function keepStorage(): Promise<boolean> {
+  try {
+    if (!navigator.storage?.persist) return false;
+    return (await navigator.storage.persisted()) || (await navigator.storage.persist());
+  } catch {
+    return false;
+  }
 }
 
 export async function getDocument(id: string): Promise<SavedDocument | undefined> {
@@ -169,4 +184,61 @@ export async function deleteBookmark(id: string): Promise<void> {
 
 export async function restoreBookmark(bookmark: Bookmark): Promise<void> {
   await db.bookmarks.put(bookmark);
+}
+
+// ========== BACKUP ==========
+
+const BACKUP_FORMAT = "paperless-library";
+
+interface Backup {
+  format: typeof BACKUP_FORMAT;
+  version: 1;
+  exportedAt: string;
+  documents: SavedDocument[];
+  bookmarks: Bookmark[];
+  positions: ReadingPosition[];
+  settings?: ReaderSettings;
+}
+
+/** The whole library as one file: books, positions, bookmarks and reading settings. */
+export async function exportLibrary(): Promise<Blob> {
+  const [documents, bookmarks, positions, settings] = await Promise.all([
+    db.savedDocuments.toArray(),
+    db.bookmarks.toArray(),
+    db.readingPosition.toArray(),
+    db.documentSettings.get("default"),
+  ]);
+  const backup: Backup = {
+    format: BACKUP_FORMAT,
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    documents,
+    bookmarks,
+    positions: positions.filter((p) => p.id !== "default"),
+    settings: settings?.settings,
+  };
+  return new Blob([JSON.stringify(backup)], { type: "application/json" });
+}
+
+/** Adds a backup's books to the library. Books already here are replaced by the backup's copy. */
+export async function importLibrary(file: File): Promise<number> {
+  let backup: Backup;
+  try {
+    backup = JSON.parse(await file.text());
+  } catch {
+    throw new Error("This isn’t a Paperless backup file.");
+  }
+  if (backup?.format !== BACKUP_FORMAT || !Array.isArray(backup.documents)) {
+    throw new Error("This isn’t a Paperless backup file.");
+  }
+  const documents = backup.documents.filter((d) => d?.id && d.document?.pages);
+  await db.transaction("rw", db.savedDocuments, db.bookmarks, db.readingPosition, async () => {
+    await db.savedDocuments.bulkPut(documents);
+    if (Array.isArray(backup.bookmarks)) await db.bookmarks.bulkPut(backup.bookmarks);
+    if (Array.isArray(backup.positions)) await db.readingPosition.bulkPut(backup.positions);
+  });
+  if (backup.settings) await saveSettings(withDefaults(backup.settings));
+  void keepStorage();
+  window.dispatchEvent(new Event(LIBRARY_CHANGED));
+  return documents.length;
 }
