@@ -11,8 +11,7 @@ const REVEAL_EDGE_PX = 72;
 /**
  * Toolbars step aside while reading and come back when people scroll up,
  * reach either end of the page, tap, or (with a mouse) point at the top edge
- * (toolbars.md › Best practices). Programmatic scrolling (restoring a
- * position, jumping to a match) is ignored.
+ * Programmatic scrolling (restoring a position or jumping to a match) is ignored.
  */
 export function useHidingChrome(enabled: boolean) {
   const [hidden, setHidden] = useState(false);
