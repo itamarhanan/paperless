@@ -1,5 +1,7 @@
 # Paperless
 
+**Try it at [onpaperless.vercel.app](https://onpaperless.vercel.app).** Your books stay in your browser; nothing is uploaded anywhere.
+
 A reader for PDFs and EPUBs that turns them into clean pages you can read on a phone. I built it because I read a lot of books as PDFs, and every PDF reader I tried either showed me a tiny fixed page or a wall of broken text.
 
 <p>
@@ -44,7 +46,7 @@ pnpm typecheck
 pnpm test        # Playwright, on an iPhone viewport and a desktop one
 ```
 
-The end-to-end tests make their own books (a PDF printed by the browser, an EPUB zipped in memory, a Gutenberg-style page), so the repo has no copyrighted text in it. The AI is mocked with answers that include a made-up passage, which the reader must reject.
+The end-to-end suite runs against the production build, the same way it runs in CI. The tests make their own books (a PDF printed by the browser, an EPUB zipped in memory, a Gutenberg-style page), so the repo has no copyrighted text in it. The AI is mocked with answers that include a made-up passage, which the reader must reject.
 
 ## Layout
 
