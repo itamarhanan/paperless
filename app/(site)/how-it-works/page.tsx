@@ -7,7 +7,7 @@ import passageDark from "@/public/screenshots/meditations-passage-dark.png";
 export const metadata = pageMetadata({
   title: "How it works",
   description:
-    "How Paperless turns a PDF into pages: chapters from the outline, italics from font names, drop caps rejoined, running heads removed, front and back matter hidden. And why its AI only labels paragraphs, with every answer checked twice.",
+    "How Paperless turns PDFs into readable pages, keeps chapter and text formatting, and checks the labels suggested by AI.",
   path: "/how-it-works",
 });
 
@@ -16,7 +16,7 @@ export default function HowItWorksPage() {
     <article>
       <PageTitle
         title="How Paperless reads a book"
-        lede="A PDF is a set of printed pages: letters, fonts and positions. Paperless reads them back into a book in your browser, with rules rather than AI. The AI comes in only at the end, to label paragraphs, and every answer it gives is checked."
+        lede="A PDF stores letters, fonts and positions on printed pages. Paperless uses that information to rebuild the text as readable pages. AI can suggest paragraph labels, and Paperless checks each suggestion before using it."
       />
 
       <BeforeAfter />
