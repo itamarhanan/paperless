@@ -311,7 +311,6 @@ function Cover({ book, className }: { book: DiscoverBook; className?: string }) 
   );
 }
 
-/** One book: what it is, why it fits, and how to read it. */
 function BookSheet({ book, onClose }: { book: DiscoverBook | null; onClose: () => void }) {
   const desktop = useIsDesktop();
   const open = !!book;
