@@ -646,7 +646,8 @@ async function extractAndCleanPdfText(
   options: { fallbackTitle?: string; onProgress?: ProgressCallback } = {}
 ): Promise<ProcessedDocument> {
   const pdfjsLib = await loadPdfJs();
-  const pdf = await pdfjsLib.getDocument({ data: arrayBuffer, fontExtraProperties: true }).promise;
+  const loading = pdfjsLib.getDocument({ data: arrayBuffer, fontExtraProperties: true });
+  const pdf = await loading.promise;
   const { onProgress } = options;
 
   // Pass 1: read every page's lines
@@ -662,6 +663,7 @@ async function extractAndCleanPdfText(
   // A scan is pictures of pages: little or no text layer behind them
   const letters = pageLines.reduce((n, lines) => n + lines.reduce((m, l) => m + l.text.length, 0), 0);
   if (letters < pdf.numPages * 40) {
+    void loading.destroy();
     throw new Error(
       "This PDF is scanned pages without text, so there’s nothing to read here yet. Try a version with selectable text."
     );
@@ -881,7 +883,7 @@ async function extractAndCleanPdfText(
   }
 
   onProgress?.(1);
-  pdf.destroy?.();
+  void loading.destroy(); // frees the worker's copy of the file
 
   return {
     title,
