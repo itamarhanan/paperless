@@ -8,9 +8,6 @@ import { ServiceWorker } from "@/components/providers/service-worker";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
-// Interface: Inter, bundled so it renders the same everywhere (system-ui resolves to
-// Ubuntu, Cantarell, Segoe… and shifts metrics). Its optical-size axis mirrors SF Pro's
-// Text/Display behaviour. Literata was drawn for long-form reading on screens.
 const inter = Inter({
   subsets: ["latin"],
   axes: ["opsz"],
@@ -69,7 +66,6 @@ export const metadata: Metadata = {
     title: "Paperless",
   },
   icons: {
-    // The SVG follows the tab's light or dark appearance; app/favicon.ico covers older browsers
     icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
     apple: "/apple-icon.png",
   },

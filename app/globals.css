@@ -211,7 +211,6 @@
     font-optical-sizing: auto;
     /* Inter cv05: lowercase l with a tail, so l / I / 1 read apart in titles */
     font-feature-settings: "cv05";
-    /* 17px: the iOS default body size (typography.md › Best practices) */
     font-size: 1.0625rem;
     line-height: 1.45;
   }
@@ -226,7 +225,6 @@
 }
 
 @layer components {
-  /* Floating functional layer: heavy glass with an opaque fallback (translucency.md) */
   .bar-glass {
     background: var(--background);
     border-color: var(--border);
@@ -435,7 +433,6 @@
   }
 }
 
-/* Motion is optional (motion.md › Best practices) */
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

@@ -2,7 +2,6 @@ import type React from "react";
 import { SiteFooter } from "@/components/site/site-footer";
 import { SiteHeader } from "@/components/site/site-header";
 
-/** About, How it works and Privacy: pages anyone can read, with or without a library. */
 export default function SiteLayout({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-dvh flex-col">

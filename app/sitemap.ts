@@ -2,7 +2,6 @@ import type { MetadataRoute } from "next";
 import { PUBLIC_PAGES } from "@/lib/metadata";
 import { SITE_URL } from "@/lib/site";
 
-/** The pages anyone can read. The reader and each book exist only on a reader’s own device. */
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
     { url: SITE_URL, changeFrequency: "monthly", priority: 1 },
