@@ -49,7 +49,6 @@ import {
   type SavedDocument,
 } from "@/lib/storage";
 import { rememberLibrary } from "@/lib/library-cookie";
-import { readFile, readGutenberg, readUrl } from "@/lib/import";
 import { cn } from "@/lib/utils";
 import { tourSeen } from "@/lib/tour";
 import { useIsClient } from "@/hooks/use-is-client";
@@ -129,6 +128,7 @@ export function Library() {
       importChain.current = importChain.current.then(async () => {
         try {
           const settings = await loadSettings();
+          const { readFile, readGutenberg, readUrl } = await import("@/lib/import");
           const onProgress = (p: number) => updateJob(job.key, { progress: p });
           const { source } = job;
           const doc =
