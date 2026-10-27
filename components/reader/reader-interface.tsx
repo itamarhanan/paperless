@@ -50,9 +50,6 @@ export function ReaderInterface() {
   const tourAsked = params.get("tour") === "1";
 
   const desktop = useIsDesktop();
-  // Zen reading: toolbars step aside on every screen while the text is all there is.
-  // With the sidebar or chat open on desktop, they stay so their tops line up.
-  // The tour points at the toolbars, so they stay while it runs.
   const chrome = useHidingChrome(!panel && !chatOpen && !(desktop && sidebarOpen) && !touring);
 
   // The sidebar opens only if the reader opened it last time
@@ -71,7 +68,6 @@ export function ReaderInterface() {
   /** The pagination the open document was built with, so settings changes repaginate once. */
   const lastPagination = useRef<string | null>(null);
 
-  // ----- Load -----
   useEffect(() => {
     let cancelled = false;
 
@@ -121,7 +117,6 @@ export function ReaderInterface() {
     };
   }, [id, router]);
 
-  // ----- Guided tour: once, from the library's sample (?tour=1) -----
   useEffect(() => {
     if (state !== "ready" || !tourAsked || !id) return;
     startTour();
@@ -133,7 +128,6 @@ export function ReaderInterface() {
     if (document?.title) window.document.title = `${document.title} · Paperless`;
   }, [document?.title]);
 
-  // ----- Repaginate when page length or smart breaks change -----
   useEffect(() => {
     if (!settings || !document || state !== "ready") return;
     const key = paginationKey(settings);
@@ -150,14 +144,12 @@ export function ReaderInterface() {
     setCurrentPage(page);
   }, [settings, document, state]);
 
-  // ----- Persist document changes (cleaned pages, pagination) -----
   useEffect(() => {
     if (!docId || !document || state !== "ready") return;
     const timer = setTimeout(() => void updateDocument(docId, document), SAVE_DELAY_MS);
     return () => clearTimeout(timer);
   }, [docId, document, state]);
 
-  // ----- Scroll: restore on open, top of page on page change -----
   useLayoutEffect(() => {
     if (state !== "ready") return;
     if (restoreScroll.current !== null) {
@@ -174,7 +166,6 @@ export function ReaderInterface() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [currentPage, state]);
 
-  // ----- Save reading position -----
   useEffect(() => {
     if (!docId || state !== "ready") return;
     let timer: ReturnType<typeof setTimeout>;
@@ -197,7 +188,6 @@ export function ReaderInterface() {
     };
   }, [docId, currentPage, state]);
 
-  // ----- Keyboard -----
   const goTo = useCallback((delta: number) => {
     const { currentPage, setCurrentPage, document } = useReaderStore.getState();
     const next = currentPage + delta;

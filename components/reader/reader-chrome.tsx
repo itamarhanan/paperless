@@ -106,7 +106,6 @@ export function TopBar({
           </Button>
         )}
 
-        {/* The title without its subtitle; the full one is in the tooltip and the library */}
         <div className="min-w-0 flex-1 px-2 text-center">
           <h1 className="truncate text-[0.9375rem] font-semibold leading-tight" title={document.title}>
             {shortTitle(document.title)}
@@ -258,7 +257,6 @@ function MoreMenu({ onCleanNow }: { onCleanNow: (page: number) => void }) {
   );
 }
 
-// ========== BOTTOM TOOLBAR (compact width) ==========
 
 export function BottomBar({ hidden }: { hidden: boolean }) {
   const panel = useReaderStore((s) => s.panel);
@@ -300,7 +298,6 @@ export function BottomBar({ hidden }: { hidden: boolean }) {
   );
 }
 
-// ========== SHEETS (compact width) ==========
 
 function SheetHeader({ title, description, onDone }: { title: string; description?: string; onDone: () => void }) {
   return (
@@ -365,7 +362,6 @@ export function PhoneSheets() {
         </DrawerContent>
       </Drawer>
 
-      {/* Nonmodal and undimmed so changes preview on the page behind (sheets.md › Anatomy) */}
       <Drawer {...sheet("appearance")} modal={false}>
         <DrawerContent overlay={false} className="max-h-[70dvh] shadow-[0_-8px_30px_rgb(0_0_0/0.12)]">
           <SheetHeader title="Appearance" onDone={close} />
@@ -387,7 +383,6 @@ export function PhoneSheets() {
   );
 }
 
-// ========== DESKTOP SIDE PANELS ==========
 
 export function Sidebar() {
   return (

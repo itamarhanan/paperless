@@ -11,7 +11,6 @@ import { Button } from "@/components/ui/button";
 import { useReaderStore } from "@/lib/store/reader-store";
 import { cn } from "@/lib/utils";
 
-// Example requests show what the feature is good at (generative-ai.md › Guide people)
 const SUGGESTIONS = [
   "Summarize this page",
   "Explain this page in simpler terms",
@@ -147,7 +146,6 @@ export function ChatPanel() {
             }}
             placeholder="Ask about this page"
             enterKeyHint="send"
-            // 17px keeps iOS Safari from zooming into the field
             className="field-sizing-content max-h-40 min-h-9 flex-1 resize-none bg-transparent px-2 py-1.5 text-[1.0625rem] outline-none placeholder:text-muted-foreground pointer-fine:text-[0.9375rem]"
           />
           {busy ? (
@@ -168,7 +166,6 @@ export function ChatPanel() {
   );
 }
 
-/** The server's own explanation (a limit, a missing key) when there is one. */
 function errorText(error: Error): string {
   try {
     const message = JSON.parse(error.message)?.error;

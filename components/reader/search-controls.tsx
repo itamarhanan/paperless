@@ -41,7 +41,6 @@ function findHits(pages: { pageNumber: number; content: string }[], query: strin
   return hits;
 }
 
-/** Find in document. Results are grouped by page; picking one highlights matches on the page. */
 export function SearchControls({ onNavigate }: { onNavigate?: () => void }) {
   const document = useReaderStore((s) => s.document);
   const currentPage = useReaderStore((s) => s.currentPage);

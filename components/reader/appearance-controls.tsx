@@ -262,7 +262,6 @@ function subscribeToKey(onChange: () => void) {
   };
 }
 
-/** Optional: the reader's own Gemini key, for AI use beyond the shared limits. */
 function AiKeyField() {
   const saved = useSyncExternalStore(subscribeToKey, getAiKey, () => "");
   const [draft, setDraft] = useState("");

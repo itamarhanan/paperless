@@ -230,7 +230,6 @@ export function ReaderPage({ onCleanNow }: { onCleanNow: (page: number) => void 
           </ReactMarkdown>
         </div>
 
-        {/* What the AI did here: said once, quietly, after the text (generative-ai.md) */}
         <div className="mt-10 flex min-h-6 items-center text-[0.8125rem] text-muted-foreground">
           <CleanupStatus
             status={cleanup}
@@ -328,7 +327,6 @@ function CleanupStatus({
       </span>
     );
   }
-  // Say what the AI did on this page: tidied the layout, marked passages, or both
   const did = [cleaned && "Layout tidied", passages > 0 && "key passages marked"].filter(Boolean).join(", ");
   if (!did) return null;
   return (

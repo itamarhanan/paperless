@@ -6,7 +6,7 @@ import { useReaderStore } from "@/lib/store/reader-store";
 import { useTour } from "./reader-tour-store";
 
 /**
- * A short guided tour of the reader, one control at a time (onboarding.md).
+ * A short guided tour of the reader, one control at a time.
  * Each step points at the real control and moves on when the reader uses it;
  * Next moves on without it. The card is nonmodal: the page and every control
  * stay usable, and it steps aside while a panel it pointed to is open.
@@ -96,7 +96,6 @@ function findTarget(name: string): HTMLElement | null {
   return null;
 }
 
-/** The space between the toolbars, where the card may go. */
 function readingArea() {
   const vw = document.documentElement.clientWidth;
   const vh = window.innerHeight;
@@ -112,7 +111,6 @@ function readingArea() {
   };
 }
 
-/** Where the ring and card go: the card beside the target, never over the toolbars. */
 function measure(target: string | undefined): Layout {
   const area = readingArea();
   const { vw, vh, topBar, bottomBar } = area;
@@ -168,7 +166,6 @@ function measure(target: string | undefined): Layout {
   return { ring, card: { ...card, width, left: x } };
 }
 
-// ========== TOUR ==========
 
 export function ReaderTour({ desktop }: { desktop: boolean }) {
   const step = useTour((s) => s.step);

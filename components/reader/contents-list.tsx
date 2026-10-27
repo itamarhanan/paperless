@@ -17,7 +17,6 @@ function snippet(text: string, length = 90) {
 const rowClass =
   "flex w-full min-h-11 items-baseline gap-3 rounded-md px-3 py-2.5 text-left text-[0.9375rem] transition-colors hover:bg-accent focus-visible:outline-2 focus-visible:outline-ring aria-[current=true]:bg-accent aria-[current=true]:font-medium pointer-fine:min-h-9 pointer-fine:py-1.5 pointer-fine:text-sm";
 
-/** Table of contents, or a list of pages when the document has none. */
 export function ContentsList({ onNavigate }: { onNavigate?: () => void }) {
   const document = useReaderStore((s) => s.document);
   const currentPage = useReaderStore((s) => s.currentPage);
