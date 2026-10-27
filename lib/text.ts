@@ -1,5 +1,10 @@
 const relative = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
 
+/** Escape a search term so it can be matched literally in a regular expression. */
+export function escapeRegExp(text: string) {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 /** "3 days ago", "just now" — how long since a stored timestamp. */
 export function timeAgo(iso?: string): string {
   if (!iso) return "";

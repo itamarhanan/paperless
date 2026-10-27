@@ -10,8 +10,7 @@ import { Slider } from "@/components/ui/slider";
 import { useReaderStore } from "@/lib/store/reader-store";
 import { useCleanupStore } from "@/hooks/use-page-cleanup";
 import { pageHasAiChanges, pagePassages, withDefaults, type ProcessedDocument } from "@/lib/pdf-processor";
-import { displayTitle } from "@/lib/text";
-import { escapeRegExp } from "./search-controls";
+import { displayTitle, escapeRegExp } from "@/lib/text";
 import { useTour } from "./reader-tour-store";
 
 const FONT_STACKS = {

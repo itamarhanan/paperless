@@ -2,11 +2,8 @@
 
 import { useDeferredValue, useEffect, useMemo, useRef, useState } from "react";
 import { Search, X } from "lucide-react";
+import { escapeRegExp } from "@/lib/text";
 import { useReaderStore } from "@/lib/store/reader-store";
-
-export function escapeRegExp(text: string) {
-  return text.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-}
 
 interface Hit {
   page: number;
