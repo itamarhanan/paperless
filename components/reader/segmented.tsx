@@ -34,8 +34,8 @@ export function Segmented<T extends string>({
             key={option.value}
             className={cn(
               "relative flex h-9 cursor-pointer select-none items-center justify-center rounded-md px-2 text-sm font-medium text-muted-foreground transition-colors pointer-coarse:h-10",
-              "has-[:checked]:bg-surface-raised has-[:checked]:text-foreground has-[:checked]:shadow-sm",
-              "has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-1 has-[:focus-visible]:outline-ring"
+              "has-checked:bg-surface-raised has-checked:text-foreground has-checked:shadow-sm",
+              "has-focus-visible:outline-2 has-focus-visible:outline-offset-1 has-focus-visible:outline-ring",
             )}
           >
             <input
