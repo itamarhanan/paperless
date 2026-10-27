@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useEffectEvent } from "react";
 
 interface Shortcuts {
   onNextPage?: () => void;
@@ -23,30 +23,30 @@ function ownsKeyboard(target: EventTarget | null): boolean {
  * left alone so system and browser shortcuts (⌘F, ⌘T…) keep working.
  */
 export function useKeyboardShortcuts(shortcuts: Shortcuts) {
-  const ref = useRef(shortcuts);
-  ref.current = shortcuts;
+  // Always sees the latest handlers without re-subscribing on every render
+  const onKeyDown = useEffectEvent((e: KeyboardEvent) => {
+    if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
+    if (ownsKeyboard(e.target)) return;
+
+    switch (e.key) {
+      case "ArrowRight":
+        e.preventDefault();
+        shortcuts.onNextPage?.();
+        break;
+      case "ArrowLeft":
+        e.preventDefault();
+        shortcuts.onPrevPage?.();
+        break;
+      case "/":
+        e.preventDefault();
+        shortcuts.onSearch?.();
+        break;
+    }
+  });
 
   useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.defaultPrevented || e.metaKey || e.ctrlKey || e.altKey) return;
-      if (ownsKeyboard(e.target)) return;
-
-      switch (e.key) {
-        case "ArrowRight":
-          e.preventDefault();
-          ref.current.onNextPage?.();
-          break;
-        case "ArrowLeft":
-          e.preventDefault();
-          ref.current.onPrevPage?.();
-          break;
-        case "/":
-          e.preventDefault();
-          ref.current.onSearch?.();
-          break;
-      }
-    };
-    window.addEventListener("keydown", onKeyDown);
-    return () => window.removeEventListener("keydown", onKeyDown);
+    const listener = (e: KeyboardEvent) => onKeyDown(e);
+    window.addEventListener("keydown", listener);
+    return () => window.removeEventListener("keydown", listener);
   }, []);
 }

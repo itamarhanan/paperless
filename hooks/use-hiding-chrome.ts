@@ -16,14 +16,17 @@ const REVEAL_EDGE_PX = 72;
  */
 export function useHidingChrome(enabled: boolean) {
   const [hidden, setHidden] = useState(false);
+  // Turned off (a panel opened): show the toolbar again, adjusting during render
+  const [wasEnabled, setWasEnabled] = useState(enabled);
+  if (wasEnabled !== enabled) {
+    setWasEnabled(enabled);
+    if (!enabled) setHidden(false);
+  }
   const lastY = useRef(0);
   const lastInput = useRef(Number.NEGATIVE_INFINITY);
 
   useEffect(() => {
-    if (!enabled) {
-      setHidden(false);
-      return;
-    }
+    if (!enabled) return;
     lastY.current = window.scrollY;
     let frame = 0;
 
