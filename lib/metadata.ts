@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-/** The public pages, in the order a reader would go through them. Used by the sitemap and the site's navigation. */
+/** Public pages shown in the site navigation and sitemap. */
 export const PUBLIC_PAGES = [
   { path: "/about", label: "About" },
   { path: "/how-it-works", label: "How it works" },

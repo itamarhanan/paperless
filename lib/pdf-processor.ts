@@ -133,7 +133,6 @@ export function paginationKey(
 
 export type ProgressCallback = (fraction: number) => void;
 
-// ========== TEXT NORMALIZATION ==========
 
 /**
  * Deterministic cleanup applied to every extracted line: folds ligatures and
@@ -196,7 +195,6 @@ export function hashText(text: string): string {
   return (h >>> 0).toString(36) + ":" + text.length;
 }
 
-// ========== SMART PAGINATION ==========
 
 const MIN_WORDS_PER_PAGE = 30;
 
@@ -436,7 +434,6 @@ export function resolveTocPages(
   });
 }
 
-// ========== PDF EXTRACTION ==========
 
 /** A run of italic (1), bold (2) or bold italic (3) text within a line. */
 type Mark = { text: string; style: 1 | 2 | 3 };
@@ -977,7 +974,6 @@ export function findExtras(
   return ranges;
 }
 
-// ========== PUBLIC API ==========
 
 export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
@@ -1012,7 +1008,6 @@ export function repaginateDocument(
   });
 }
 
-// ========== AI LAYOUT ==========
 
 /** The paragraphs on a page (older documents only store where each page starts). */
 export function pageIndices(document: ProcessedDocument, page: ProcessedPage): number[] {
