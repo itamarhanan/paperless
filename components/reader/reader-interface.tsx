@@ -60,6 +60,8 @@ export function ReaderInterface() {
 
   /** Scroll fraction to restore once the saved page has rendered. */
   const restoreScroll = useRef<number | null>(null);
+  /** The pagination the open document was built with, so settings changes repaginate once. */
+  const lastPagination = useRef<string | null>(null);
 
   // ----- Load -----
   useEffect(() => {
@@ -108,7 +110,6 @@ export function ReaderInterface() {
   }, [document?.title]);
 
   // ----- Repaginate when page length or smart breaks change -----
-  const lastPagination = useRef<string | null>(null);
   useEffect(() => {
     if (!settings || !document || state !== "ready") return;
     const key = paginationKey(settings);

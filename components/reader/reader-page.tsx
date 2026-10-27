@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useLayoutEffect, useMemo, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useMemo, useRef, useState, type CSSProperties } from "react";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArrowLeft, ArrowRight, Loader2, X } from "lucide-react";
@@ -52,7 +52,7 @@ function ensureHighlightStyles() {
 /** Paints search matches with the CSS Custom Highlight API; no DOM changes. */
 function useSearchHighlight(container: React.RefObject<HTMLElement | null>, query: string, contentKey: string) {
   useEffect(() => {
-    const highlights = (globalThis as any).CSS?.highlights;
+    const highlights = typeof CSS === "undefined" ? undefined : CSS.highlights;
     if (!highlights) return;
     ensureHighlightStyles();
     highlights.delete("search-hit");
@@ -74,7 +74,6 @@ function useSearchHighlight(container: React.RefObject<HTMLElement | null>, quer
     }
     if (!ranges.length) return;
 
-    const Highlight = (globalThis as any).Highlight;
     highlights.set("search-hit", new Highlight(...ranges.slice(1)));
     highlights.set("search-hit-current", new Highlight(ranges[0]));
     const rect = ranges[0].getBoundingClientRect();
@@ -94,7 +93,7 @@ function useSearchHighlight(container: React.RefObject<HTMLElement | null>, quer
 function useKeyPassages(container: React.RefObject<HTMLElement | null>, passages: string[], contentKey: string) {
   const key = passages.join("\u0000");
   useEffect(() => {
-    const highlights = (globalThis as any).CSS?.highlights;
+    const highlights = typeof CSS === "undefined" ? undefined : CSS.highlights;
     if (!highlights) return;
     ensureHighlightStyles();
     highlights.delete("key-passage");
@@ -127,8 +126,10 @@ function useKeyPassages(container: React.RefObject<HTMLElement | null>, passages
       ranges.push(range);
     }
     if (!ranges.length) return;
-    highlights.set("key-passage", new (globalThis as any).Highlight(...ranges));
-    return () => highlights.delete("key-passage");
+    highlights.set("key-passage", new Highlight(...ranges));
+    return () => {
+      highlights.delete("key-passage");
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [container, key, contentKey]);
 }
@@ -143,6 +144,7 @@ export function ReaderPage({ onCleanNow }: { onCleanNow: (page: number) => void 
   const searchQuery = useReaderStore((s) => s.searchQuery);
   const setSearchQuery = useReaderStore((s) => s.setSearchQuery);
   const cleanup = useCleanupStore((s) => s.status[currentPage]);
+  const paused = useCleanupStore((s) => s.paused);
 
   const page = document.pages[currentPage - 1];
   const total = document.totalPages;
@@ -153,21 +155,20 @@ export function ReaderPage({ onCleanNow }: { onCleanNow: (page: number) => void 
   // What is on screen. Cleaned text that arrives mid-read waits behind a pill.
   const [displayCleaned, setDisplayCleaned] = useState(cleanedAvailable);
   const [pendingSwap, setPendingSwap] = useState(false);
-  const shownPage = useRef(currentPage);
-
-  useLayoutEffect(() => {
-    if (shownPage.current !== currentPage) {
-      shownPage.current = currentPage;
-      setDisplayCleaned(cleanedAvailable);
-      setPendingSwap(false);
-      return;
-    }
-    if (cleanedAvailable && !displayCleaned) {
+  const [shown, setShown] = useState({ page: currentPage, cleanedAvailable });
+  if (shown.page !== currentPage) {
+    // A new page opens in whichever layout is ready
+    setShown({ page: currentPage, cleanedAvailable });
+    setDisplayCleaned(cleanedAvailable);
+    setPendingSwap(false);
+  } else if (shown.cleanedAvailable !== cleanedAvailable) {
+    setShown({ page: currentPage, cleanedAvailable });
+    if (cleanedAvailable) {
+      // Swap in place only before the reader has started down the page
       if (window.scrollY < SWAP_THRESHOLD_PX) setDisplayCleaned(true);
       else setPendingSwap(true);
     }
-    if (!cleanedAvailable && displayCleaned) setDisplayCleaned(false);
-  }, [currentPage, cleanedAvailable, displayCleaned]);
+  }
 
   const useCleaned = displayCleaned && cleanedAvailable && !showOriginal;
   const markdown = useCleaned ? page.enhancedContent : page?.markdownContent || page?.content || "";
@@ -230,6 +231,7 @@ export function ReaderPage({ onCleanNow }: { onCleanNow: (page: number) => void 
         <div className="mt-10 flex min-h-6 items-center text-[0.8125rem] text-muted-foreground">
           <CleanupStatus
             status={cleanup}
+            paused={settings.autoCleanup ? paused : null}
             cleaned={useCleaned}
             hasCleaned={cleanedAvailable}
             passages={settings.keyPassages ? passages.length : 0}
@@ -272,6 +274,7 @@ export function ReaderPage({ onCleanNow }: { onCleanNow: (page: number) => void 
 
 function CleanupStatus({
   status,
+  paused,
   cleaned,
   hasCleaned,
   passages,
@@ -280,6 +283,7 @@ function CleanupStatus({
   onRetry,
 }: {
   status?: "cleaning" | "failed";
+  paused: string | null;
   cleaned: boolean;
   hasCleaned: boolean;
   passages: number;
@@ -307,6 +311,9 @@ function CleanupStatus({
         </button>
       </span>
     );
+  }
+  if (paused && !hasCleaned && !passages) {
+    return <span role="status">{paused}</span>;
   }
   if (showingOriginal && (hasCleaned || passages)) {
     return (
@@ -347,7 +354,11 @@ function PageTurn({
   onJump: (page: number) => void;
 }) {
   const [target, setTarget] = useState(page);
-  useEffect(() => setTarget(page), [page]);
+  const [shownPage, setShownPage] = useState(page);
+  if (shownPage !== page) {
+    setShownPage(page);
+    setTarget(page);
+  }
   const isLast = page >= total;
 
   return (

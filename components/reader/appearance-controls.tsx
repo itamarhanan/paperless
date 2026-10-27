@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { ChevronDown, Minus, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -11,6 +11,8 @@ import { useReaderStore } from "@/lib/store/reader-store";
 import { useUpdateSettings } from "@/hooks/use-update-settings";
 import { PAGE_LENGTHS, withDefaults } from "@/lib/pdf-processor";
 import { cn } from "@/lib/utils";
+import { AI_KEY_CHANGED, getAiKey, setAiKey } from "@/lib/ai-key";
+import { useIsClient } from "@/hooks/use-is-client";
 
 const MIN_SIZE = 14;
 const MAX_SIZE = 30;
@@ -55,7 +57,7 @@ function SwitchRow({
 }: {
   id: string;
   label: string;
-  description?: string;
+  description?: React.ReactNode;
   checked: boolean;
   onChange: (checked: boolean) => void;
 }) {
@@ -74,8 +76,7 @@ export function AppearanceControls() {
   const settings = withDefaults(useReaderStore((s) => s.settings));
   const update = useUpdateSettings();
   const { theme, setTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-  useEffect(() => setMounted(true), []);
+  const mounted = useIsClient();
 
   const pageLength = nearest(PAGE_LENGTHS, settings.charsPerPage);
 
@@ -226,7 +227,15 @@ export function AppearanceControls() {
           <SwitchRow
             id="auto-cleanup"
             label="Check layout with AI"
-            description="Finds missed headings, quotes and lists and hides stray symbols as you read. It never changes the book’s words. Pages are sent to Google Gemini."
+            description={
+              <>
+                Finds missed headings, quotes and lists and hides stray symbols as you read. It never changes the
+                book’s words. Pages are sent to Google Gemini ·{" "}
+                <a href="/privacy" target="_blank" className="underline underline-offset-4 hover:text-foreground">
+                  Privacy
+                </a>
+              </>
+            }
             checked={settings.autoCleanup}
             onChange={(on) => update({ autoCleanup: on })}
           />
@@ -237,8 +246,87 @@ export function AppearanceControls() {
             checked={settings.keyPassages}
             onChange={(on) => update({ keyPassages: on })}
           />
+          <AiKeyField />
         </CollapsibleContent>
       </Collapsible>
     </div>
+  );
+}
+
+function subscribeToKey(onChange: () => void) {
+  window.addEventListener(AI_KEY_CHANGED, onChange);
+  window.addEventListener("storage", onChange); // changed in another tab
+  return () => {
+    window.removeEventListener(AI_KEY_CHANGED, onChange);
+    window.removeEventListener("storage", onChange);
+  };
+}
+
+/** Optional: the reader's own Gemini key, for AI use beyond the shared limits. */
+function AiKeyField() {
+  const saved = useSyncExternalStore(subscribeToKey, getAiKey, () => "");
+  const [draft, setDraft] = useState("");
+
+  if (saved) {
+    return (
+      <div className="flex min-h-11 items-center justify-between gap-4 py-1">
+        <span className="min-w-0">
+          <span className="block text-[0.9375rem]">Your Gemini key</span>
+          <span className="block text-[0.8125rem] text-muted-foreground">
+            In use, ending in {saved.slice(-4)}. It stays in this browser.
+          </span>
+        </span>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={() => setAiKey("")}
+        >
+          Remove
+        </Button>
+      </div>
+    );
+  }
+
+  return (
+    <form
+      className="space-y-2"
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (!draft.trim()) return;
+        setAiKey(draft);
+        setDraft("");
+      }}
+    >
+      <label htmlFor="gemini-key" className="block">
+        <span className="block text-[0.9375rem]">Your own Gemini key</span>
+        <span className="block text-[0.8125rem] text-muted-foreground">
+          Optional. AI here is shared and limited; with a free key from{" "}
+          <a
+            href="https://aistudio.google.com/apikey"
+            target="_blank"
+            rel="noreferrer"
+            className="underline underline-offset-4 hover:text-foreground"
+          >
+            Google AI Studio
+          </a>{" "}
+          it isn’t. The key stays in this browser.
+        </span>
+      </label>
+      <div className="flex gap-2">
+        <input
+          id="gemini-key"
+          type="password"
+          autoComplete="off"
+          spellCheck={false}
+          placeholder="AIza…"
+          value={draft}
+          onChange={(e) => setDraft(e.target.value)}
+          className="h-11 min-w-0 flex-1 rounded-lg border bg-background px-3 text-[1.0625rem] outline-none focus-visible:outline-2 focus-visible:outline-ring pointer-fine:h-9 pointer-fine:text-[0.9375rem]"
+        />
+        <Button type="submit" variant="outline" disabled={!draft.trim()}>
+          Save
+        </Button>
+      </div>
+    </form>
   );
 }

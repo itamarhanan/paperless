@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useChat } from "@ai-sdk/react";
 import { DefaultChatTransport } from "ai";
+import { aiHeaders } from "@/lib/ai-key";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
 import { ArrowUp, RotateCcw, Square } from "lucide-react";
@@ -23,7 +24,7 @@ export function ChatPanel() {
   const document = useReaderStore((s) => s.document);
   const currentPage = useReaderStore((s) => s.currentPage);
 
-  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat" }), []);
+  const transport = useMemo(() => new DefaultChatTransport({ api: "/api/chat", headers: () => aiHeaders() }), []);
   const { messages, sendMessage, status, error, stop, regenerate, clearError } = useChat({
     id: docId ?? undefined,
     transport,
@@ -112,7 +113,7 @@ export function ChatPanel() {
 
         {error && (
           <div role="alert" className="mt-4 flex items-center justify-between gap-3 rounded-lg border px-3 py-2 text-[0.875rem]">
-            <span>Couldn’t get an answer. Check your connection and try again.</span>
+            <span>{errorText(error)}</span>
             <Button size="sm" variant="outline" onClick={() => regenerate({ body: { context, title: document?.title, page: currentPage } })}>
               <RotateCcw /> Retry
             </Button>
@@ -164,4 +165,15 @@ export function ChatPanel() {
       </form>
     </div>
   );
+}
+
+/** The server's own explanation (a limit, a missing key) when there is one. */
+function errorText(error: Error): string {
+  try {
+    const message = JSON.parse(error.message)?.error;
+    if (typeof message === "string") return message;
+  } catch {
+    // Not a server message
+  }
+  return "Couldn’t get an answer. Check your connection and try again.";
 }

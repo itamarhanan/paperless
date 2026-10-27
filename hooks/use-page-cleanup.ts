@@ -3,18 +3,24 @@
 import { useCallback, useEffect, useRef } from "react";
 import { create } from "zustand";
 import { useReaderStore } from "@/lib/store/reader-store";
+import { AI_KEY_CHANGED, aiHeaders } from "@/lib/ai-key";
 import { pageIndices, type AiLabel, type ProcessedDocument } from "@/lib/pdf-processor";
 
 export type CleanupStatus = "cleaning" | "failed";
 
 interface CleanupState {
   status: Record<number, CleanupStatus>;
+  /** Why page checks stopped (an AI limit was reached), until a key is added. */
+  paused: string | null;
   set: (page: number, status: CleanupStatus | null) => void;
+  setPaused: (reason: string | null) => void;
   reset: () => void;
 }
 
 export const useCleanupStore = create<CleanupState>((set) => ({
   status: {},
+  paused: null,
+  setPaused: (paused) => set({ paused }),
   set: (page, status) =>
     set((state) => {
       const next = { ...state.status };
@@ -113,13 +119,21 @@ export function usePageCleanup() {
         const indices = pageIndices(document, page);
         const response = await fetch("/api/enhance", {
           method: "POST",
-          headers: { "Content-Type": "application/json" },
+          headers: { "Content-Type": "application/json", ...aiHeaders() },
           body: JSON.stringify({
             title: document.title,
             paragraphs: indices.map((i) => ({ id: i, text: document.rawParagraphs[i], kind: currentLabel(document, i) })),
           }),
           signal: controller.current.signal,
         });
+        if (response.status === 429 || response.status === 503) {
+          // A limit or a missing key: retrying page after page won't help
+          const data = await response.json().catch(() => null);
+          useCleanupStore.getState().setPaused(data?.error ?? "AI page checks are paused for now.");
+          useCleanupStore.getState().set(pageNumber, null);
+          queue.current = [];
+          break;
+        }
         if (!response.ok) throw new Error(`HTTP ${response.status}`);
         const data = (await response.json()) as AiResponse;
 
@@ -160,8 +174,16 @@ export function usePageCleanup() {
     };
   }, [docId]);
 
+  // A key was added or removed: try again
   useEffect(() => {
-    if (!enabled || !totalPages) return;
+    const resume = () => useCleanupStore.getState().setPaused(null);
+    window.addEventListener(AI_KEY_CHANGED, resume);
+    return () => window.removeEventListener(AI_KEY_CHANGED, resume);
+  }, []);
+
+  const paused = useCleanupStore((s) => s.paused);
+  useEffect(() => {
+    if (!enabled || !totalPages || paused) return;
     const timer = setTimeout(() => {
       const next = currentPage < totalPages ? [currentPage, currentPage + 1] : [currentPage];
       // Current page first; drop anything queued for pages we've moved away from
@@ -169,11 +191,12 @@ export function usePageCleanup() {
       enqueue(next, true);
     }, DWELL_MS);
     return () => clearTimeout(timer);
-  }, [enabled, currentPage, totalPages, docId, enqueue]);
+  }, [enabled, paused, currentPage, totalPages, docId, enqueue]);
 
   /** Clean one page now, regardless of the auto setting. */
   const cleanNow = useCallback(
     (page: number) => {
+      useCleanupStore.getState().setPaused(null);
       useCleanupStore.getState().set(page, null);
       enqueue([page], true);
     },
