@@ -218,7 +218,14 @@ function MoreMenu({ onCleanNow }: { onCleanNow: (page: number) => void }) {
           <Ellipsis />
         </Button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="min-w-56">
+      <DropdownMenuContent
+        align="end"
+        className="min-w-56"
+        // Starting the tour moves focus to its card; don't pull it back to More
+        onCloseAutoFocus={(e) => {
+          if (useTour.getState().step !== null) e.preventDefault();
+        }}
+      >
         {aiTouched ? (
           <DropdownMenuItem onSelect={() => setShowOriginal(currentPage, !showOriginal)}>
             <Sparkles /> {showOriginal ? "Show AI layout" : "Show original layout"}
