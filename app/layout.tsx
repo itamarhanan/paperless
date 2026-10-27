@@ -4,6 +4,7 @@ import { Inter, Literata, JetBrains_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
+import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
 // Interface: Inter, bundled so it renders the same everywhere (system-ui resolves to
@@ -40,9 +41,27 @@ export const viewport: Viewport = {
   ],
 };
 
+const DESCRIPTION =
+  "A quiet reader for PDFs and EPUBs. Books become clean, comfortable pages on your phone and desktop, and AI tidies the layout without ever changing the words.";
+
 export const metadata: Metadata = {
+  metadataBase: new URL(SITE_URL),
   title: { default: "Paperless", template: "%s · Paperless" },
-  description: "Read PDFs and EPUBs as clean, comfortable text on your phone and desktop.",
+  description: DESCRIPTION,
+  applicationName: "Paperless",
+  authors: [{ name: "Itamar Hanan", url: "https://itamar-hanan.web.app" }],
+  openGraph: {
+    type: "website",
+    siteName: "Paperless",
+    title: "Paperless: read PDFs and EPUBs as real books",
+    description: DESCRIPTION,
+    url: "/",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Paperless: read PDFs and EPUBs as real books",
+    description: DESCRIPTION,
+  },
   appleWebApp: {
     capable: true,
     statusBarStyle: "default",
