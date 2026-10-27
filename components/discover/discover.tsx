@@ -17,7 +17,6 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } f
 import { Segmented } from "@/components/reader/segmented";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import { importDocument, loadSettings } from "@/lib/storage";
-import { readGutenberg } from "@/lib/import";
 import { aiHeaders } from "@/lib/ai-key";
 import { gutenbergPage, type DiscoverBook, type DiscoverDetails } from "@/lib/discover";
 import { cn } from "@/lib/utils";
@@ -367,6 +366,7 @@ function BookDetails({ book }: { book: DiscoverBook }) {
     if (!book.gutenbergId) return;
     setAdding("adding");
     try {
+      const { readGutenberg } = await import("@/lib/import");
       const doc = await readGutenberg(book.gutenbergId, book.title, await loadSettings());
       const id = await importDocument(doc, { kind: "gutenberg", id: book.gutenbergId });
       router.push(`/reader?id=${encodeURIComponent(id)}`);
