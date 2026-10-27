@@ -284,7 +284,7 @@ function BookSection({
 function BookSheet({ book, onClose }: { book: DiscoverBook | null; onClose: () => void }) {
   const desktop = useIsDesktop();
   const open = !!book;
-  const body = book ? <BookDetails book={book} /> : null;
+  const body = book ? <SelectedBook book={book} /> : null;
   const authors = book?.authors.join(", ") || "Unknown author";
 
   if (desktop) {
@@ -313,7 +313,7 @@ function BookSheet({ book, onClose }: { book: DiscoverBook | null; onClose: () =
   );
 }
 
-function BookDetails({ book }: { book: DiscoverBook }) {
+function SelectedBook({ book }: { book: DiscoverBook }) {
   const router = useRouter();
   const [details, setDetails] = useState<DiscoverDetails | null>(null);
   const [loading, setLoading] = useState(!!book.workKey);
