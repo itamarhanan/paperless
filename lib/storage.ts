@@ -81,6 +81,9 @@ export async function deleteDocument(id: string): Promise<DeletedDocument | null
     await db.readingPosition.delete(id);
     if (getLastDocumentId() === id) clearLastDocumentId();
     return { saved, bookmarks, position };
+  }).then((result) => {
+    if (typeof window !== "undefined") window.dispatchEvent(new Event(LIBRARY_CHANGED));
+    return result;
   });
 }
 
@@ -90,6 +93,7 @@ export async function restoreDocument(deleted: DeletedDocument): Promise<void> {
     if (deleted.bookmarks.length) await db.bookmarks.bulkPut(deleted.bookmarks);
     if (deleted.position) await db.readingPosition.put(deleted.position);
   });
+  rememberLibrary(true);
   window.dispatchEvent(new Event(LIBRARY_CHANGED));
 }
 
@@ -241,6 +245,7 @@ export async function importLibrary(file: File): Promise<number> {
   });
   if (backup.settings) await saveSettings(withDefaults(backup.settings));
   void keepStorage();
+  rememberLibrary(true);
   window.dispatchEvent(new Event(LIBRARY_CHANGED));
   return documents.length;
 }
