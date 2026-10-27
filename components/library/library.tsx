@@ -485,10 +485,16 @@ export function Library() {
             </p>
           </>
         )}
-        <footer className="mt-10 text-center text-[0.8125rem] text-muted-foreground">
-          <Link href="/privacy" className="rounded-sm underline-offset-4 hover:text-foreground hover:underline">
-            Privacy
-          </Link>
+        <footer className="mt-10 flex justify-center gap-5 text-[0.8125rem] text-muted-foreground">
+          {[
+            ["/about", "About"],
+            ["/how-it-works", "How it works"],
+            ["/privacy", "Privacy"],
+          ].map(([href, label]) => (
+            <Link key={href} href={href} className="rounded-sm underline-offset-4 hover:text-foreground hover:underline">
+              {label}
+            </Link>
+          ))}
         </footer>
       </main>
 
@@ -735,6 +741,12 @@ function EmptyLibrary({
       </div>
       <p className="mt-6 hidden text-[0.8125rem] text-muted-foreground pointer-fine:block">
         Or drop a file anywhere on this page.
+      </p>
+      <p className="mt-6 text-[0.9375rem] text-muted-foreground">
+        New here?{" "}
+        <Link href="/about" className="font-medium text-foreground underline underline-offset-4">
+          What Paperless does
+        </Link>
       </p>
     </section>
   );
