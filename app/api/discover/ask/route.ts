@@ -49,6 +49,8 @@ export async function POST(req: Request) {
       model: access.google(MODEL),
       output: Output.object({ schema: suggestionsSchema }),
       temperature: 0.4,
+      // Thinking took 7–13s and didn't make the picks better; without it the list comes in 2–4s
+      providerOptions: { google: { thinkingConfig: { thinkingBudget: 0 } } },
       abortSignal: AbortSignal.timeout(30000),
       prompt: `Someone is looking for books. Their request:
 """
@@ -57,7 +59,7 @@ ${prompt.trim()}
 
 Suggest up to ${MAX_SUGGESTIONS} real, published books that fit the request well, best fit first. Prefer well-regarded books over obscure ones, and include classics that are in the public domain when they fit, since those can be read for free. Never invent a book; if unsure a book exists, leave it out.
 
-For each: the exact title as published (without subtitle), the author's name, and one short sentence on why it fits this request, in the language of the request.`,
+For each: the title and author as Open Library lists them, without a subtitle. That's the usual English title for translated classics (Meditations, not Τὰ εἰς ἑαυτόν) and the original title for other books. Never translate a title into the language of the request. Then one short sentence on why it fits this request, written in the language of the request.`,
     });
     suggestions = output.books;
   } catch (err) {
