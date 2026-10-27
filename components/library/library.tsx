@@ -7,6 +7,8 @@ import { toast } from "sonner";
 import {
   ArrowUpDown,
   BookOpen,
+  Download,
+  Share,
   Compass,
   Ellipsis,
   FileText,
@@ -39,7 +41,9 @@ import {
 import { Skeleton } from "@/components/ui/skeleton";
 import {
   deleteDocument,
+  exportLibrary,
   importDocument,
+  importLibrary,
   LIBRARY_CHANGED,
   listDocuments,
   loadAllPositions,
@@ -49,8 +53,9 @@ import {
   type Position,
   type SavedDocument,
 } from "@/lib/storage";
-import { processClientPdf, processPdfUrl } from "@/lib/pdf-processor";
+import { readFile, readGutenberg, readUrl } from "@/lib/import";
 import { cn } from "@/lib/utils";
+import { useIsClient } from "@/hooks/use-is-client";
 
 type Sort = "recent" | "title" | "added";
 
@@ -59,7 +64,7 @@ interface ImportJob {
   name: string;
   progress: number;
   error?: string;
-  source: { file: File } | { url: string };
+  source: { file: File } | { url: string } | { gutenberg: number; title: string };
 }
 
 const ACCEPT = ".pdf,.epub,application/pdf,application/epub+zip";
@@ -102,14 +107,14 @@ export function Library() {
   const fileInput = useRef<HTMLInputElement>(null);
   const importChain = useRef(Promise.resolve());
 
-  const refresh = useCallback(async () => {
-    const [list, pos] = await Promise.all([
-      listDocuments(),
-      loadAllPositions(),
-    ]);
-    setDocs(list);
-    setPositions(pos);
-  }, []);
+  const refresh = useCallback(
+    () =>
+      Promise.all([listDocuments(), loadAllPositions()]).then(([list, pos]) => {
+        setDocs(list);
+        setPositions(pos);
+      }),
+    [],
+  );
 
   useEffect(() => {
     void refresh();
@@ -129,10 +134,13 @@ export function Library() {
         try {
           const settings = await loadSettings();
           const onProgress = (p: number) => updateJob(job.key, { progress: p });
+          const { source } = job;
           const doc =
-            "file" in job.source
-              ? await processClientPdf(job.source.file, settings, onProgress)
-              : await processPdfUrl(job.source.url, settings, onProgress);
+            "file" in source
+              ? await readFile(source.file, settings, onProgress)
+              : "url" in source
+                ? await readUrl(source.url, settings, onProgress)
+                : await readGutenberg(source.gutenberg, source.title, settings);
           if (!doc.pages.length)
             throw new Error(
               "No readable text found. Scanned PDFs aren’t supported yet.",
@@ -184,6 +192,39 @@ export function Library() {
     };
     setJobs((all) => [job, ...all]);
     runJob(job, true);
+  };
+
+  // A first book in one tap: Meditations, free on Project Gutenberg
+  const addSample = () => {
+    const job: ImportJob = {
+      key: crypto.randomUUID(),
+      name: SAMPLE.title,
+      progress: 0.5,
+      source: { gutenberg: SAMPLE.id, title: SAMPLE.title },
+    };
+    setJobs((all) => [job, ...all]);
+    runJob(job, true);
+  };
+
+  // ----- Backup -----
+  const backupInput = useRef<HTMLInputElement>(null);
+  const backUp = async () => {
+    const blob = await exportLibrary();
+    const url = URL.createObjectURL(blob);
+    const a = Object.assign(document.createElement("a"), {
+      href: url,
+      download: `Paperless library ${new Date().toISOString().slice(0, 10)}.json`,
+    });
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  };
+  const restore = async (file: File) => {
+    try {
+      const count = await importLibrary(file);
+      toast(count === 1 ? "Restored 1 book" : `Restored ${count} books`);
+    } catch (error) {
+      toast.error((error as Error).message);
+    }
   };
 
   // ----- Drop anywhere (desktop) -----
@@ -272,17 +313,31 @@ export function Library() {
         }}
       />
 
+      <input
+        ref={backupInput}
+        type="file"
+        accept=".json,application/json"
+        className="sr-only"
+        tabIndex={-1}
+        aria-hidden
+        onChange={(e) => {
+          const file = e.target.files?.[0];
+          if (file) void restore(file);
+          e.target.value = "";
+        }}
+      />
+
       <header className="pt-safe">
-        <div className="px-safe mx-auto flex h-12 max-w-3xl items-center justify-end gap-1 sm:px-6"></div>
+        <div className="h-4 sm:h-8" />
       </header>
 
       <main className="px-safe mx-auto max-w-3xl pb-[calc(env(safe-area-inset-bottom)+3rem)] sm:px-6">
         {/* Large title (typography.md: Large Title 34pt bold) */}
-        <div className="flex max-w-3xl items-center justify-between">
-          <h1 className="mb-4 text-[2.125rem] font-bold leading-tight tracking-tight">
+        <div className="mb-4 flex items-center justify-between gap-2">
+          <h1 className="text-[2.125rem] font-bold leading-tight tracking-tight">
             Library
           </h1>
-          <div>
+          <div className="flex items-center">
             <Button asChild variant="ghost" className="gap-1.5 font-semibold">
               <Link href="/discover">
                 <Compass /> Discover
@@ -291,13 +346,30 @@ export function Library() {
             {!empty && (
               <AddMenu onFile={openPicker} onLink={() => setLinkOpen(true)} />
             )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="-mr-2" aria-label="Library options">
+                  <Ellipsis />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="min-w-56">
+                <DropdownMenuItem onSelect={() => void backUp()} disabled={!docs?.length}>
+                  <Download /> Back up library
+                </DropdownMenuItem>
+                <DropdownMenuItem onSelect={() => backupInput.current?.click()}>
+                  <Upload /> Restore from backup…
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
+
+        {!!docs?.length && <HomeScreenHint />}
 
         {docs === null ? (
           <LibrarySkeleton />
         ) : empty ? (
-          <EmptyLibrary onFile={openPicker} onLink={() => setLinkOpen(true)} />
+          <EmptyLibrary onFile={openPicker} onLink={() => setLinkOpen(true)} onSample={addSample} />
         ) : (
           <>
             {resume && !query && (
@@ -405,6 +477,11 @@ export function Library() {
             </p>
           </>
         )}
+        <footer className="mt-10 text-center text-[0.8125rem] text-muted-foreground">
+          <Link href="/privacy" className="rounded-sm underline-offset-4 hover:text-foreground hover:underline">
+            Privacy
+          </Link>
+        </footer>
       </main>
 
       <LinkDialog
@@ -450,7 +527,7 @@ function AddMenu({
       <DropdownMenuTrigger asChild>
         <Button
           variant="ghost"
-          className="-mr-2 gap-1.5 font-semibold"
+          className="gap-1.5 font-semibold"
           aria-label="Add a document"
         >
           <Plus className="size-5" />
@@ -609,9 +686,11 @@ function ImportRow({
 function EmptyLibrary({
   onFile,
   onLink,
+  onSample,
 }: {
   onFile: () => void;
   onLink: () => void;
+  onSample: () => void;
 }) {
   return (
     <section className="flex flex-col items-center px-4 pb-10 pt-16 text-center">
@@ -629,6 +708,9 @@ function EmptyLibrary({
         <Button size="lg" onClick={onFile}>
           <FileText /> Choose a file
         </Button>
+        <Button size="lg" variant="outline" onClick={onSample}>
+          <BookOpen /> Try it with Meditations
+        </Button>
         <Button size="lg" variant="ghost" onClick={onLink}>
           <Link2 /> Add from link
         </Button>
@@ -645,6 +727,58 @@ function EmptyLibrary({
   );
 }
 
+const SAMPLE = { id: 2680, title: "Meditations" };
+
+const HINT_KEY = "paperless:home-screen-hint";
+
+/** iPhone or iPad Safari, not yet on the Home Screen, and the hint not yet dismissed. */
+function needsHomeScreen(): boolean {
+  const ios =
+    /iPhone|iPad|iPod/.test(navigator.userAgent) ||
+    (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent)); // iPadOS reports as a Mac
+  const installed =
+    window.matchMedia("(display-mode: standalone)").matches || (navigator as { standalone?: boolean }).standalone;
+  try {
+    return ios && !installed && !localStorage.getItem(HINT_KEY);
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Safari may clear a website's data after weeks without a visit, but keeps it
+ * for sites added to the Home Screen. Said once, on iPhone and iPad only.
+ */
+function HomeScreenHint() {
+  const client = useIsClient();
+  const [dismissed, setDismissed] = useState(false);
+  if (!client || dismissed || !needsHomeScreen()) return null;
+
+  const dismiss = () => {
+    try {
+      localStorage.setItem(HINT_KEY, "1");
+    } catch {
+      // Private mode
+    }
+    setDismissed(true);
+  };
+
+  return (
+    <aside className="mb-6 flex items-start gap-3 rounded-2xl border p-4 text-[0.9375rem]">
+      <Share className="mt-0.5 size-5 shrink-0" aria-hidden />
+      <p className="flex-1">
+        <span className="font-medium">Keep your books on this iPhone.</span>{" "}
+        <span className="text-muted-foreground">
+          Books are saved in Safari, which can clear them after a few weeks away. Tap Share, then “Add to Home Screen” to keep them.
+        </span>
+      </p>
+      <Button variant="ghost" size="icon" className="-m-2 shrink-0" aria-label="Dismiss" onClick={dismiss}>
+        <X />
+      </Button>
+    </aside>
+  );
+}
+
 function LinkDialog({
   open,
   onOpenChange,
@@ -654,87 +788,88 @@ function LinkDialog({
   onOpenChange: (open: boolean) => void;
   onSubmit: (url: string) => void;
 }) {
-  const [url, setUrl] = useState("");
-  const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    if (open) {
-      setUrl("");
-      setError(null);
-    }
-  }, [open]);
-
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
-        <form
-          noValidate
-          onSubmit={(e) => {
-            e.preventDefault();
-            try {
-              const parsed = new URL(url.trim());
-              if (!/^https?:$/.test(parsed.protocol)) throw new Error();
-            } catch {
-              setError("Enter a full link that starts with https://");
-              return;
-            }
-            onSubmit(url.trim());
+        {/* Mounted afresh each time the dialog opens, so it starts empty */}
+        <LinkForm
+          onSubmit={(url) => {
+            onSubmit(url);
             onOpenChange(false);
           }}
-        >
-          <DialogHeader>
-            <DialogTitle>Add from link</DialogTitle>
-            <DialogDescription>
-              Paste a direct link to a PDF or EPUB file.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="mt-4">
-            <label htmlFor="doc-url" className="sr-only">
-              Link
-            </label>
-            <input
-              id="doc-url"
-              type="url"
-              inputMode="url"
-              autoComplete="url"
-              autoCapitalize="none"
-              autoCorrect="off"
-              spellCheck={false}
-              autoFocus
-              placeholder="https://example.com/paper.pdf"
-              value={url}
-              onChange={(e) => {
-                setUrl(e.target.value);
-                setError(null);
-              }}
-              aria-invalid={!!error}
-              aria-describedby={error ? "doc-url-error" : undefined}
-              className="h-11 w-full rounded-lg border bg-background px-3 text-[1.0625rem] outline-none focus-visible:outline-2 focus-visible:outline-ring aria-invalid:border-destructive pointer-fine:h-10 pointer-fine:text-[0.9375rem]"
-            />
-            {error && (
-              <p
-                id="doc-url-error"
-                className="mt-2 text-[0.8125rem] text-destructive"
-              >
-                {error}
-              </p>
-            )}
-          </div>
-          <DialogFooter className="mt-6">
-            <Button
-              type="button"
-              variant="ghost"
-              onClick={() => onOpenChange(false)}
-            >
-              Cancel
-            </Button>
-            <Button type="submit" disabled={!url.trim()}>
-              Add
-            </Button>
-          </DialogFooter>
-        </form>
+          onCancel={() => onOpenChange(false)}
+        />
       </DialogContent>
     </Dialog>
+  );
+}
+
+function LinkForm({ onSubmit, onCancel }: { onSubmit: (url: string) => void; onCancel: () => void }) {
+  const [url, setUrl] = useState("");
+  const [error, setError] = useState<string | null>(null);
+
+  return (
+    <form
+      noValidate
+      onSubmit={(e) => {
+        e.preventDefault();
+        try {
+          const parsed = new URL(url.trim());
+          if (!/^https?:$/.test(parsed.protocol)) throw new Error();
+        } catch {
+          setError("Enter a full link that starts with https://");
+          return;
+        }
+        onSubmit(url.trim());
+      }}
+    >
+      <DialogHeader>
+        <DialogTitle>Add from link</DialogTitle>
+        <DialogDescription>
+          Paste a direct link to a PDF or EPUB file.
+        </DialogDescription>
+      </DialogHeader>
+      <div className="mt-4">
+        <label htmlFor="doc-url" className="sr-only">
+          Link
+        </label>
+        <input
+          id="doc-url"
+          type="url"
+          inputMode="url"
+          autoComplete="url"
+          autoCapitalize="none"
+          autoCorrect="off"
+          spellCheck={false}
+          autoFocus
+          placeholder="https://example.com/paper.pdf"
+          value={url}
+          onChange={(e) => {
+            setUrl(e.target.value);
+            setError(null);
+          }}
+          aria-invalid={!!error}
+          aria-describedby={error ? "doc-url-error" : undefined}
+          className="h-11 w-full rounded-lg border bg-background px-3 text-[1.0625rem] outline-none focus-visible:outline-2 focus-visible:outline-ring aria-invalid:border-destructive pointer-fine:h-10 pointer-fine:text-[0.9375rem]"
+        />
+        {error && (
+          <p
+            id="doc-url-error"
+            className="mt-2 text-[0.8125rem] text-destructive"
+          >
+            {error}
+          </p>
+        )}
+      </div>
+      <DialogFooter className="mt-6">
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          Cancel
+        </Button>
+        <Button type="submit" disabled={!url.trim()}>
+          Add
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }
 
@@ -747,51 +882,62 @@ function RenameDialog({
   onClose: () => void;
   onSave: (title: string) => void;
 }) {
-  const [title, setTitle] = useState("");
-  useEffect(() => {
-    if (doc) setTitle(doc.title);
-  }, [doc]);
-
   return (
     <Dialog open={!!doc} onOpenChange={(open) => !open && onClose()}>
       <DialogContent className="sm:max-w-md">
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (title.trim()) onSave(title.trim());
-          }}
-        >
-          <DialogHeader>
-            <DialogTitle>Rename</DialogTitle>
-            <DialogDescription className="sr-only">
-              Change the document’s title
-            </DialogDescription>
-          </DialogHeader>
-          <label htmlFor="doc-title" className="sr-only">
-            Title
-          </label>
-          <input
-            id="doc-title"
-            autoFocus
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            onFocus={(e) => e.target.select()}
-            className="mt-4 h-11 w-full rounded-lg border bg-background px-3 text-[1.0625rem] outline-none focus-visible:outline-2 focus-visible:outline-ring pointer-fine:h-10 pointer-fine:text-[0.9375rem]"
-          />
-          <DialogFooter className="mt-6">
-            <Button type="button" variant="ghost" onClick={onClose}>
-              Cancel
-            </Button>
-            <Button
-              type="submit"
-              disabled={!title.trim() || title.trim() === doc?.title}
-            >
-              Save
-            </Button>
-          </DialogFooter>
-        </form>
+        {doc && <RenameForm key={doc.id} current={doc.title} onClose={onClose} onSave={onSave} />}
       </DialogContent>
     </Dialog>
+  );
+}
+
+function RenameForm({
+  current,
+  onClose,
+  onSave,
+}: {
+  current: string;
+  onClose: () => void;
+  onSave: (title: string) => void;
+}) {
+  const [title, setTitle] = useState(current);
+
+  return (
+    <form
+      onSubmit={(e) => {
+        e.preventDefault();
+        if (title.trim()) onSave(title.trim());
+      }}
+    >
+      <DialogHeader>
+        <DialogTitle>Rename</DialogTitle>
+        <DialogDescription className="sr-only">
+          Change the document’s title
+        </DialogDescription>
+      </DialogHeader>
+      <label htmlFor="doc-title" className="sr-only">
+        Title
+      </label>
+      <input
+        id="doc-title"
+        autoFocus
+        value={title}
+        onChange={(e) => setTitle(e.target.value)}
+        onFocus={(e) => e.target.select()}
+        className="mt-4 h-11 w-full rounded-lg border bg-background px-3 text-[1.0625rem] outline-none focus-visible:outline-2 focus-visible:outline-ring pointer-fine:h-10 pointer-fine:text-[0.9375rem]"
+      />
+      <DialogFooter className="mt-6">
+        <Button type="button" variant="ghost" onClick={onClose}>
+          Cancel
+        </Button>
+        <Button
+          type="submit"
+          disabled={!title.trim() || title.trim() === current}
+        >
+          Save
+        </Button>
+      </DialogFooter>
+    </form>
   );
 }
 
