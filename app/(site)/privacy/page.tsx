@@ -1,22 +1,18 @@
-import type { Metadata } from "next";
-import Link from "next/link";
-import { ChevronLeft } from "lucide-react";
+import { NextPage, PageTitle, Prose } from "@/components/site/page-parts";
+import { pageMetadata } from "@/lib/metadata";
 
-export const metadata: Metadata = { title: "Privacy" };
+export const metadata = pageMetadata({
+  title: "Privacy",
+  description:
+    "Paperless has no accounts and keeps no copy of your books. What stays on your device, and what is sent where when you use AI or search for books.",
+  path: "/privacy",
+});
 
 export default function PrivacyPage() {
   return (
-    <main className="px-safe pt-safe mx-auto max-w-2xl pb-16 sm:px-6">
-      <Link
-        href="/"
-        className="-ml-2 mt-3 inline-flex h-11 items-center gap-1 rounded-md px-2 text-[0.9375rem] font-medium hover:bg-muted"
-      >
-        <ChevronLeft className="size-5" aria-hidden /> Library
-      </Link>
-      <article className="reader-prose mt-4" style={{ fontFamily: "var(--font-inter)" }}>
-        <h1>Privacy</h1>
-        <p>Paperless has no accounts and keeps no copy of your books.</p>
-
+    <article>
+      <PageTitle title="Privacy" lede="Paperless has no accounts and keeps no copy of your books." />
+      <Prose className="mt-10">
         <h2>Your books stay on your device</h2>
         <p>
           Files you add are read in your browser and saved there, with your reading positions, bookmarks and settings.
@@ -52,7 +48,8 @@ export default function PrivacyPage() {
           Paperless counts page visits with Vercel Web Analytics, which uses no cookies and doesn’t identify you. It
           never sees what you read.
         </p>
-      </article>
-    </main>
+      </Prose>
+      <NextPage href="/" title="Open your library" />
+    </article>
   );
 }
