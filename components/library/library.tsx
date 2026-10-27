@@ -498,7 +498,8 @@ export function Library() {
       {linkOpen && <LinkDialog open onOpenChange={setLinkOpen} onSubmit={importUrl} />}
       {renaming && (
         <RenameDialog
-          doc={renaming}
+          open
+          current={renaming.title}
           onClose={() => setRenaming(null)}
           onSave={async (title) => {
             await renameDocument(renaming.id, title);

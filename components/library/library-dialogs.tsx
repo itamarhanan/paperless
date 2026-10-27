@@ -1,7 +1,6 @@
 "use client";
 
 import { useState } from "react";
-import type { SavedDocument } from "@/lib/storage";
 import { Button } from "@/components/ui/button";
 import {
   Dialog,
@@ -101,18 +100,20 @@ function LinkForm({ onSubmit, onCancel }: { onSubmit: (url: string) => void; onC
 }
 
 export function RenameDialog({
-  doc,
+  open,
+  current,
   onClose,
   onSave,
 }: {
-  doc: SavedDocument;
+  open: boolean;
+  current: string;
   onClose: () => void;
   onSave: (title: string) => void;
 }) {
   return (
-    <Dialog open onOpenChange={(open) => !open && onClose()}>
+    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
       <DialogContent className="sm:max-w-md">
-        <RenameForm key={doc.id} current={doc.title} onClose={onClose} onSave={onSave} />
+        {open && <RenameForm current={current} onClose={onClose} onSave={onSave} />}
       </DialogContent>
     </Dialog>
   );
@@ -138,7 +139,7 @@ function RenameForm({
     >
       <DialogHeader>
         <DialogTitle>Rename</DialogTitle>
-        <DialogDescription className="sr-only">Change the document’s title</DialogDescription>
+        <DialogDescription className="sr-only">Change the title</DialogDescription>
       </DialogHeader>
       <label htmlFor="doc-title" className="sr-only">
         Title

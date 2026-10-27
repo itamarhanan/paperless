@@ -8,14 +8,7 @@ import { ArrowUpRight, ChevronLeft, ChevronRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
+import { RenameDialog } from "@/components/library/library-dialogs";
 import {
   deleteDocument,
   getDocument,
@@ -638,71 +631,6 @@ function Bookmarks({ id, doc, bookmarks }: { id: string; doc: ProcessedDocument;
         })}
       </List>
     </Group>
-  );
-}
-
-
-function RenameDialog({
-  open,
-  current,
-  onClose,
-  onSave,
-}: {
-  open: boolean;
-  current: string;
-  onClose: () => void;
-  onSave: (title: string) => void;
-}) {
-  return (
-    <Dialog open={open} onOpenChange={(o) => !o && onClose()}>
-      <DialogContent className="sm:max-w-md">
-        {open && <RenameForm current={current} onClose={onClose} onSave={onSave} />}
-      </DialogContent>
-    </Dialog>
-  );
-}
-
-function RenameForm({
-  current,
-  onClose,
-  onSave,
-}: {
-  current: string;
-  onClose: () => void;
-  onSave: (title: string) => void;
-}) {
-  const [title, setTitle] = useState(current);
-  return (
-    <form
-      onSubmit={(e) => {
-        e.preventDefault();
-        if (title.trim()) onSave(title.trim());
-      }}
-    >
-      <DialogHeader>
-        <DialogTitle>Rename</DialogTitle>
-        <DialogDescription className="sr-only">Change the book’s title</DialogDescription>
-      </DialogHeader>
-      <label htmlFor="book-title" className="sr-only">
-        Title
-      </label>
-      <input
-        id="book-title"
-        autoFocus
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        onFocus={(e) => e.target.select()}
-        className="mt-4 h-11 w-full rounded-lg border bg-background px-3 text-[1.0625rem] outline-none focus-visible:outline-2 focus-visible:outline-ring pointer-fine:h-10 pointer-fine:text-[0.9375rem]"
-      />
-      <DialogFooter className="mt-6">
-        <Button type="button" variant="ghost" onClick={onClose}>
-          Cancel
-        </Button>
-        <Button type="submit" disabled={!title.trim() || title.trim() === current}>
-          Save
-        </Button>
-      </DialogFooter>
-    </form>
   );
 }
 
