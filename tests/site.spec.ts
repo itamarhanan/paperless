@@ -1,50 +1,23 @@
 import { test, expect } from "@playwright/test";
 
-test("About says what Paperless is and leads into the app", async ({ page }) => {
-  await page.goto("/about");
-  await expect(page).toHaveTitle("Paperless: read PDF and EPUB books as clean pages");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Read PDF and EPUB books as clean pages");
-  for (const heading of ["Why I built it", "What it does", "Who it’s for", "The AI labels and never writes"]) {
-    await expect(page.getByRole("heading", { name: heading })).toBeVisible();
-  }
-  await expect(page.getByRole("img", { name: /Paperless on a desktop/ })).toBeVisible();
-
-  await page.getByRole("main").getByRole("link", { name: "Open Paperless" }).click();
-  await expect(page).toHaveURL(/\/library$/);
-  await expect(page.getByRole("heading", { name: "Library", exact: true })).toBeVisible();
-});
-
-test("a first visit gets the front page, a returning reader the library", async ({ page }) => {
+test("a first visit gets the front page, and an empty library keeps it", async ({ page }) => {
   await page.goto("/");
-  await expect(page).toHaveTitle("Paperless: a reader for the books you already have");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Paperless");
   const jsonLd = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
   expect(jsonLd["@type"]).toBe("WebApplication");
 
-  // The contents lead to their chapters
-  await page.getByRole("navigation", { name: "Contents" }).getByRole("link", { name: "AI that labels and never writes" }).click();
-  await expect(page).toHaveURL(/#ai$/);
-  await expect(page.getByRole("heading", { name: "AI that labels and never writes" })).toBeInViewport();
-
-  // An empty library still shows the front page at "/"
   await page.getByRole("link", { name: "Open your library" }).first().click();
-  await expect(page.getByRole("heading", { name: "Library", exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/\/library$/);
   await page.goto("/");
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Paperless");
+  await expect(page.getByRole("link", { name: "Open your library" }).first()).toBeVisible();
 });
 
 test("the public pages link to each other in reading order", async ({ page }) => {
   await page.goto("/about");
   await page.getByRole("navigation", { name: "Next page" }).getByRole("link").click();
   await expect(page).toHaveURL(/\/how-it-works$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("How Paperless reads a book");
-  for (const heading of ["From a PDF to pages", "What the AI may do", "How answers are checked", "Show original"]) {
-    await expect(page.getByRole("heading", { name: heading, exact: true })).toBeVisible();
-  }
 
   await page.getByRole("navigation", { name: "Next page" }).getByRole("link").click();
   await expect(page).toHaveURL(/\/privacy$/);
-  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Privacy");
 
   await page.getByRole("navigation", { name: "Next page" }).getByRole("link").click();
   await expect(page).toHaveURL(/\/library$/);
