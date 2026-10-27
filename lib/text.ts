@@ -1,3 +1,24 @@
+const relative = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
+
+/** "3 days ago", "just now" — how long since a stored timestamp. */
+export function timeAgo(iso?: string): string {
+  if (!iso) return "";
+  const seconds = (new Date(iso).getTime() - Date.now()) / 1000;
+  const steps: [Intl.RelativeTimeFormatUnit, number][] = [
+    ["year", 31536000],
+    ["month", 2592000],
+    ["week", 604800],
+    ["day", 86400],
+    ["hour", 3600],
+    ["minute", 60],
+  ];
+  for (const [unit, size] of steps) {
+    if (Math.abs(seconds) >= size)
+      return relative.format(Math.round(seconds / size), unit);
+  }
+  return "just now";
+}
+
 const SMALL_WORDS = new Set([
   "a", "an", "and", "as", "at", "but", "by", "for", "from", "in", "into", "nor",
   "of", "on", "or", "over", "per", "the", "to", "via", "vs", "with",

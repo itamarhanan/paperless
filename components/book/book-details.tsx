@@ -48,30 +48,13 @@ import {
   WORDS_PER_MINUTE,
   type ChangeKind,
 } from "@/lib/book-summary";
-import { displayTitle } from "@/lib/text";
+import { displayTitle, timeAgo } from "@/lib/text";
 import { cn } from "@/lib/utils";
 
 type LoadState = "loading" | "ready" | "missing";
 
 const dateFormat = new Intl.DateTimeFormat("en", { day: "numeric", month: "long", year: "numeric" });
 const numberFormat = new Intl.NumberFormat("en");
-
-const relative = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-function timeAgo(iso: string) {
-  const seconds = (new Date(iso).getTime() - Date.now()) / 1000;
-  const steps: [Intl.RelativeTimeFormatUnit, number][] = [
-    ["year", 31536000],
-    ["month", 2592000],
-    ["week", 604800],
-    ["day", 86400],
-    ["hour", 3600],
-    ["minute", 60],
-  ];
-  for (const [unit, size] of steps) {
-    if (Math.abs(seconds) >= size) return relative.format(Math.round(seconds / size), unit);
-  }
-  return "Just now";
-}
 
 const plural = (n: number, one: string, many = `${one}s`) => `${numberFormat.format(n)} ${n === 1 ? one : many}`;
 

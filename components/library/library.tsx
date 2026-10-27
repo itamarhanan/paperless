@@ -49,6 +49,7 @@ import {
   type SavedDocument,
 } from "@/lib/storage";
 import { rememberLibrary } from "@/lib/library-cookie";
+import { timeAgo } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { tourSeen } from "@/lib/tour";
 import { useIsClient } from "@/hooks/use-is-client";
@@ -67,25 +68,6 @@ interface ImportJob {
 }
 
 const ACCEPT = ".pdf,.epub,application/pdf,application/epub+zip";
-
-const relative = new Intl.RelativeTimeFormat("en", { numeric: "auto" });
-function timeAgo(iso?: string) {
-  if (!iso) return "";
-  const seconds = (new Date(iso).getTime() - Date.now()) / 1000;
-  const steps: [Intl.RelativeTimeFormatUnit, number][] = [
-    ["year", 31536000],
-    ["month", 2592000],
-    ["week", 604800],
-    ["day", 86400],
-    ["hour", 3600],
-    ["minute", 60],
-  ];
-  for (const [unit, size] of steps) {
-    if (Math.abs(seconds) >= size)
-      return relative.format(Math.round(seconds / size), unit);
-  }
-  return "just now";
-}
 
 function progressOf(doc: SavedDocument, position?: Position) {
   const total = doc.document.totalPages || 1;
