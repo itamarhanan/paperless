@@ -4,10 +4,6 @@ import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-/**
- * The public pages are set like a page in the reader: Literata at the reader’s
- * default size and measure (.reader-prose), with the interface in Inter.
- */
 export function Prose({ children, className }: { children: React.ReactNode; className?: string }) {
   return <div className={cn("reader-prose mx-auto", className)}>{children}</div>;
 }
@@ -23,7 +19,6 @@ export function PageTitle({ title, lede }: { title: string; lede: React.ReactNod
 
 type Shot = { light: StaticImageData; dark: StaticImageData; alt: string };
 
-/** A screenshot in the current appearance: the light one, or the dark one in dark mode (dark-mode.md › Icons and images). */
 export function Screenshot({
   shot,
   sizes,
@@ -48,7 +43,6 @@ export function Caption({ children }: { children: React.ReactNode }) {
   return <figcaption className="mt-3 text-[0.8125rem] leading-snug text-muted-foreground">{children}</figcaption>;
 }
 
-/** The reader’s page turn: a large Next button that names where it goes. */
 export function NextPage({ href, title, label = "Next" }: { href: string; title: string; label?: string }) {
   return (
     <nav aria-label="Next page" className="mx-auto mt-14 max-w-[42.5rem] border-t pt-6">

@@ -3,10 +3,6 @@ import { LogoMark } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { SiteNav } from "./site-nav";
 
-/**
- * The public pages’ bar: where you are, and one way into the app.
- * Glass only on this floating layer, never on the text (translucency.md).
- */
 export function SiteHeader() {
   return (
     <header className="bar-glass pt-safe sticky top-0 z-40 border-b">
