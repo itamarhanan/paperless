@@ -107,7 +107,7 @@ export function BookDetails() {
 
   useEffect(() => {
     if (!id) {
-      router.replace("/");
+      router.replace("/library");
       return;
     }
     let cancelled = false;
@@ -161,7 +161,7 @@ export function BookDetails() {
           It may have been removed, or it was added on another device. Books are stored only in this browser.
         </p>
         <Button asChild>
-          <Link href="/">Go to library</Link>
+          <Link href="/library">Go to library</Link>
         </Button>
       </main>
     );
@@ -173,7 +173,7 @@ export function BookDetails() {
 
   const removeBook = async () => {
     const deleted = await deleteDocument(id);
-    router.push("/");
+    router.push("/library");
     if (deleted) {
       toast(`Removed “${deleted.saved.title}”`, {
         action: { label: "Undo", onClick: () => void restoreDocument(deleted) },

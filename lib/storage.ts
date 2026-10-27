@@ -1,5 +1,6 @@
 import { withDefaults, type ProcessedDocument, type ReaderSettings } from "./pdf-processor";
 import { db } from "./db";
+import { rememberLibrary } from "./home";
 import type { Bookmark, BookSource, ReadingPosition, SavedDocument } from "./db";
 
 export type { Bookmark, BookSource, SavedDocument } from "./db";
@@ -15,6 +16,7 @@ export async function importDocument(document: ProcessedDocument, source?: BookS
   const now = new Date().toISOString();
   await db.savedDocuments.put({ id, title: document.title, savedAt: now, lastOpenedAt: now, source, document });
   void keepStorage();
+  rememberLibrary(true);
   return id;
 }
 

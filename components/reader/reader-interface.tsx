@@ -208,7 +208,7 @@ export function ReaderInterface() {
           It may have been removed, or it was added on another device. Documents are stored only in this browser.
         </p>
         <Button asChild>
-          <Link href="/">Go to library</Link>
+          <Link href="/library">Go to library</Link>
         </Button>
       </main>
     );

@@ -114,7 +114,7 @@ export function Discover() {
       <header className="pt-safe">
         <div className="px-safe mx-auto flex h-12 max-w-3xl items-center sm:px-6">
           <Button asChild variant="ghost" className="-ml-2 gap-0.5 px-2 has-[>svg]:px-2">
-            <Link href="/">
+            <Link href="/library">
               <ChevronLeft className="size-5" />
               Library
             </Link>

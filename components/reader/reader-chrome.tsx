@@ -83,7 +83,7 @@ export function TopBar({
     >
       <div className="px-safe flex h-12 items-center gap-1 lg:h-13">
         <Button asChild variant="ghost" className="-ml-2 gap-0.5 px-2 has-[>svg]:px-2">
-          <Link href="/" aria-label="Back to library">
+          <Link href="/library" aria-label="Back to library">
             <ChevronLeft className="size-5" />
             <span className="max-[359px]:sr-only">Library</span>
           </Link>
@@ -198,7 +198,7 @@ function MoreMenu({ onCleanNow }: { onCleanNow: (page: number) => void }) {
   const remove = async () => {
     if (!docId) return;
     const deleted = await deleteDocument(docId);
-    router.push("/");
+    router.push("/library");
     if (deleted) {
       toast(`Removed “${deleted.saved.title}”`, {
         action: { label: "Undo", onClick: () => void restoreDocument(deleted) },

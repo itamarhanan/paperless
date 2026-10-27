@@ -49,7 +49,7 @@ export default function PrivacyPage() {
           never sees what you read.
         </p>
       </Prose>
-      <NextPage href="/" title="Open your library" />
+      <NextPage href="/library" title="Open your library" />
     </article>
   );
 }

@@ -20,8 +20,8 @@ const PREFIX = "paperless-";
 const CACHE = `${PREFIX}${VERSION}`;
 
 /** Pages that work without a server, from what the browser has stored. */
-const PAGES = ["/", "/reader", "/book"];
-const FILES = ["/pdf.worker.min.mjs", "/manifest.webmanifest", "/apple-icon.png", "/icons/icon-192.png", "/icons/icon-512.png"];
+const PAGES = ["/", "/library", "/reader", "/book"];
+const FILES = ["/pdf.worker.min.mjs", "/manifest.webmanifest", "/icon.svg", "/favicon.ico", "/apple-icon.png", "/icons/icon-192.png", "/icons/icon-512.png"];
 
 const isStatic = (url) => url.pathname.startsWith("/_next/static/");
 

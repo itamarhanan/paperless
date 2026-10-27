@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useEffectEvent, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
@@ -54,6 +54,7 @@ import {
   type Position,
   type SavedDocument,
 } from "@/lib/storage";
+import { rememberLibrary } from "@/lib/home";
 import { readFile, readGutenberg, readUrl } from "@/lib/import";
 import { cn } from "@/lib/utils";
 import { useIsClient } from "@/hooks/use-is-client";
@@ -113,16 +114,12 @@ export function Library() {
       Promise.all([listDocuments(), loadAllPositions()]).then(([list, pos]) => {
         setDocs(list);
         setPositions(pos);
+        rememberLibrary(list.length > 0);
+        return list;
       }),
     [],
   );
 
-  useEffect(() => {
-    void refresh();
-    const onChange = () => void refresh();
-    window.addEventListener(LIBRARY_CHANGED, onChange);
-    return () => window.removeEventListener(LIBRARY_CHANGED, onChange);
-  }, [refresh]);
 
   // ----- Import -----
   const updateJob = (key: string, patch: Partial<ImportJob>) =>
@@ -213,6 +210,24 @@ export function Library() {
     setJobs((all) => [job, ...all]);
     runJob(job, true);
   };
+
+  const startSample = useEffectEvent((list: SavedDocument[]) => {
+    const existing = list.find((d) => d.source?.kind === "gutenberg" && d.source.id === SAMPLE.id);
+    if (existing) router.push(`/reader?id=${encodeURIComponent(existing.id)}`);
+    else addSample();
+  });
+
+  useEffect(() => {
+    void refresh().then((list) => {
+      // The front page's "Start with Meditations" arrives as /library?sample
+      if (!new URLSearchParams(window.location.search).has("sample")) return;
+      window.history.replaceState(null, "", "/library");
+      startSample(list);
+    });
+    const onChange = () => void refresh();
+    window.addEventListener(LIBRARY_CHANGED, onChange);
+    return () => window.removeEventListener(LIBRARY_CHANGED, onChange);
+  }, [refresh]);
 
   // ----- Backup -----
   const backupInput = useRef<HTMLInputElement>(null);
@@ -744,7 +759,7 @@ function EmptyLibrary({
       </p>
       <p className="mt-6 text-[0.9375rem] text-muted-foreground">
         New here?{" "}
-        <Link href="/about" className="font-medium text-foreground underline underline-offset-4">
+        <Link href="/" className="font-medium text-foreground underline underline-offset-4">
           What Paperless does
         </Link>
       </p>
