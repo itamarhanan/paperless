@@ -57,6 +57,7 @@ import {
 import { rememberLibrary } from "@/lib/home";
 import { readFile, readGutenberg, readUrl } from "@/lib/import";
 import { cn } from "@/lib/utils";
+import { tourSeen } from "@/lib/tour";
 import { useIsClient } from "@/hooks/use-is-client";
 
 type Sort = "recent" | "title" | "added";
@@ -152,7 +153,9 @@ export function Library() {
                 : { kind: "gutenberg", id: source.gutenberg },
           );
           setJobs((all) => all.filter((j) => j.key !== job.key));
-          if (openWhenDone) router.push(`/reader?id=${encodeURIComponent(id)}`);
+          // The sample opens with the guided tour, until it has been seen
+          const tour = "gutenberg" in source && source.gutenberg === SAMPLE.id && !tourSeen() ? "&tour=1" : "";
+          if (openWhenDone) router.push(`/reader?id=${encodeURIComponent(id)}${tour}`);
           else {
             await refresh();
             toast(`Added “${doc.title}”`);
