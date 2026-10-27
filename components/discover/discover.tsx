@@ -17,7 +17,8 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerHeader, DrawerTitle } f
 import { Segmented } from "@/components/reader/segmented";
 import { useIsDesktop } from "@/hooks/use-media-query";
 import { importDocument, loadSettings } from "@/lib/storage";
-import { processHtmlBook } from "@/lib/html-processor";
+import { readGutenberg } from "@/lib/import";
+import { aiHeaders } from "@/lib/ai-key";
 import { gutenbergPage, type DiscoverBook, type DiscoverDetails } from "@/lib/discover";
 import { cn } from "@/lib/utils";
 
@@ -43,7 +44,14 @@ export function Discover() {
   const mode: Mode = params.get("mode") === "ask" ? "ask" : "search";
   const submitted = params.get("q") ?? "";
   const [input, setInput] = useState(submitted);
-  const [results, setResults] = useState<Results>({ state: "idle" });
+  // Keep the field in step with the URL (Back, a new link) without an effect
+  const [shownQuery, setShownQuery] = useState(submitted);
+  if (shownQuery !== submitted) {
+    setShownQuery(submitted);
+    setInput(submitted);
+  }
+  // Answers are tagged with the request they belong to; anything else is still loading
+  const [answer, setAnswer] = useState<{ request: string; results: Results } | null>(null);
   const [selected, setSelected] = useState<DiscoverBook | null>(null);
   const [attempt, setAttempt] = useState(0);
   const inputRef = useRef<HTMLInputElement>(null);
@@ -58,21 +66,23 @@ export function Discover() {
     router.replace(`/discover${search.size ? `?${search}` : ""}`, { scroll: false });
   };
 
-  useEffect(() => setInput(submitted), [submitted]);
+  const requestKey = `${mode}\u0000${submitted}\u0000${attempt}`;
+  const results: Results = !submitted
+    ? { state: "idle" }
+    : answer?.request === requestKey
+      ? answer.results
+      : { state: "loading" };
 
   useEffect(() => {
-    if (!submitted) {
-      setResults({ state: "idle" });
-      return;
-    }
+    if (!submitted) return;
     const controller = new AbortController();
-    setResults({ state: "loading" });
+    const setResults = (results: Results) => setAnswer({ request: requestKey, results });
     const request =
       mode === "search"
         ? fetch(`/api/discover/search?q=${encodeURIComponent(submitted)}`, { signal: controller.signal })
         : fetch("/api/discover/ask", {
             method: "POST",
-            headers: { "Content-Type": "application/json" },
+            headers: { "Content-Type": "application/json", ...aiHeaders() },
             body: JSON.stringify({ prompt: submitted }),
             signal: controller.signal,
           });
@@ -95,7 +105,7 @@ export function Discover() {
         if (error.name !== "AbortError") setResults({ state: "error", message: error.message });
       });
     return () => controller.abort();
-  }, [mode, submitted, attempt]);
+  }, [mode, submitted, requestKey]);
 
   const ideas = mode === "search" ? SEARCH_IDEAS : ASK_IDEAS;
 
@@ -357,14 +367,7 @@ function BookDetails({ book }: { book: DiscoverBook }) {
     if (!book.gutenbergId) return;
     setAdding("adding");
     try {
-      const response = await fetch(`/api/discover/gutenberg?id=${book.gutenbergId}`);
-      if (!response.ok) {
-        const data = await response.json().catch(() => null);
-        throw new Error(data?.error ?? "Couldn’t download this book.");
-      }
-      const html = await response.text();
-      const settings = await loadSettings();
-      const doc = processHtmlBook(html, settings, { title: book.title });
+      const doc = await readGutenberg(book.gutenbergId, book.title, await loadSettings());
       const id = await importDocument(doc);
       router.push(`/reader?id=${encodeURIComponent(id)}`);
     } catch (error) {
