@@ -78,7 +78,6 @@ const plural = (n: number, one: string, many = `${one}s`) => `${numberFormat.for
 const readerHref = (id: string, page?: number) =>
   `/reader?id=${encodeURIComponent(id)}${page ? `&page=${page}` : ""}`;
 
-/** What each kind of AI label did to the page, in reading terms. */
 const CHANGE_LABELS: [ChangeKind, string][] = [
   ["heading", "Headings found"],
   ["quote", "Quotes set apart"],
@@ -89,7 +88,6 @@ const CHANGE_LABELS: [ChangeKind, string][] = [
   ["drop", "Lines hidden"],
 ];
 
-/** Rows shown before “Show all” in long lists. */
 const PREVIEW_ROWS = 8;
 
 export function BookDetails() {
@@ -181,7 +179,6 @@ export function BookDetails() {
     }
   };
 
-  // Undoable, like removing a book (feedback.md: no warning when the result is expected)
   const removeAi = async () => {
     const before = saved;
     const cleared: ProcessedDocument = renderAiPages({ ...before.document, ai: undefined });
@@ -247,7 +244,6 @@ export function BookDetails() {
   );
 }
 
-// ========== ROWS AND GROUPS (lists-and-tables.md › Style: inset grouped) ==========
 
 const rowBase = "flex min-h-11 w-full items-center gap-3 px-4 py-2.5 text-left text-[1.0625rem] pointer-fine:text-[0.9375rem]";
 const rowInteractive =
@@ -294,7 +290,6 @@ function InfoRow({ label, value }: { label: string; value: React.ReactNode }) {
   );
 }
 
-/** A row that opens the reader on a page. */
 function PageRow({
   href,
   page,
@@ -330,7 +325,6 @@ function ShowAll({ count, noun, onClick }: { count: number; noun: string; onClic
   );
 }
 
-/** Text from the book, shown in its reading face and in quotation marks. */
 function Quote({ text, clamp = 3 }: { text: string; clamp?: 2 | 3 }) {
   return (
     <q
@@ -344,7 +338,6 @@ function Quote({ text, clamp = 3 }: { text: string; clamp?: 2 | 3 }) {
   );
 }
 
-// ========== OVERVIEW ==========
 
 function Overview({
   id,
@@ -440,7 +433,6 @@ function hostOf(url: string) {
   }
 }
 
-// ========== CONTENTS ==========
 
 function Contents({ id, doc }: { id: string; doc: ProcessedDocument }) {
   const [all, setAll] = useState(false);
@@ -478,7 +470,6 @@ function Contents({ id, doc }: { id: string; doc: ProcessedDocument }) {
   );
 }
 
-// ========== HIDDEN PAGES ==========
 
 function HiddenPages({
   doc,
@@ -531,7 +522,6 @@ function HiddenPages({
   );
 }
 
-// ========== AI ==========
 
 function AiSection({
   id,
@@ -646,7 +636,6 @@ function PassageRow({ id, page, text }: { id: string; page: number | undefined; 
   );
 }
 
-// ========== BOOKMARKS ==========
 
 function Bookmarks({ id, doc, bookmarks }: { id: string; doc: ProcessedDocument; bookmarks: Bookmark[] }) {
   if (!bookmarks.length) return null;
@@ -669,7 +658,6 @@ function Bookmarks({ id, doc, bookmarks }: { id: string; doc: ProcessedDocument;
   );
 }
 
-// ========== RENAME ==========
 
 function RenameDialog({
   open,
@@ -735,7 +723,6 @@ function RenameForm({
   );
 }
 
-// ========== LOADING ==========
 
 function DetailsSkeleton({ backLink }: { backLink: React.ReactNode }) {
   return (
