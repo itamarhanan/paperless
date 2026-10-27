@@ -2,7 +2,7 @@ import { test, expect, pageIndicator } from "./fixtures";
 
 test.beforeEach(async ({ page, ai }) => {
   void ai;
-  await page.goto("/");
+  await page.goto("/library");
   await page.getByRole("button", { name: "Try it with Meditations" }).click();
   await page.locator(".reader-prose").waitFor();
 });

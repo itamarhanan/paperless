@@ -28,13 +28,13 @@ async function openDetailsFromReader(page: Page) {
 
 test.beforeEach(async ({ page, ai }) => {
   void ai;
-  await page.goto("/");
+  await page.goto("/library");
   await page.getByRole("button", { name: "Try it with Meditations" }).click();
   await page.locator(".reader-prose").waitFor();
 });
 
 test("details open from the library and from the reader, and lead back", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/library");
   await page.getByRole("button", { name: "Options for Meditations" }).click();
   await page.getByRole("menuitem", { name: "Book details" }).click();
   await page.waitForURL(/\/book\?id=/);

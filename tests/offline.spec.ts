@@ -6,7 +6,7 @@ test.skip(!process.env.CI, "the service worker runs in production builds only");
 
 test("the library, a book and its details open offline after one visit", async ({ page, context, ai }) => {
   void ai;
-  await page.goto("/");
+  await page.goto("/library");
   await page.waitForFunction(async () => !!(await navigator.serviceWorker.ready) && !!navigator.serviceWorker.controller);
 
   await page.getByRole("button", { name: "Try it with Meditations" }).click();
@@ -22,21 +22,21 @@ test("the library, a book and its details open offline after one visit", async (
   await page.getByRole("button", { name: /^Next/ }).click();
   await expect(page.locator(".reader-prose")).toContainText("Begin the morning");
 
-  await page.goto("/");
+  await page.goto("/library");
   await expect(page.getByRole("button", { name: "Options for Meditations" })).toBeVisible();
 
   await page.goto(`/book?id=${encodeURIComponent(id)}`);
   await expect(page.getByRole("heading", { level: 1, name: "Meditations" })).toBeVisible();
 
   // Opened with a tap in the library, a client-side navigation
-  await page.goto("/");
+  await page.goto("/library");
   await page.locator(`a[href^="/reader?id="]`).first().click();
   // It opens where reading stopped
   await expect(page.locator(".reader-prose")).toContainText("Begin the morning");
 });
 
 test("the API is never answered from the cache", async ({ page, context }) => {
-  await page.goto("/");
+  await page.goto("/library");
   await page.waitForFunction(async () => !!(await navigator.serviceWorker.ready) && !!navigator.serviceWorker.controller);
   await context.setOffline(true);
   const failed = await page.evaluate(() =>

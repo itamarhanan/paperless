@@ -3,7 +3,7 @@ import { test, expect } from "./fixtures";
 
 test("the sample book opens in one tap, without Gutenberg's licence pages", async ({ page, ai }) => {
   void ai;
-  await page.goto("/");
+  await page.goto("/library");
   await page.getByRole("button", { name: "Try it with Meditations" }).click();
   await page.waitForURL(/\/reader\?id=/);
   const prose = page.locator(".reader-prose");
@@ -11,12 +11,30 @@ test("the sample book opens in one tap, without Gutenberg's licence pages", asyn
   await expect(prose).not.toContainText("Project Gutenberg");
 });
 
-test("a backup restores the library", async ({ page, ai }) => {
+test("the front page's Start with Meditations adds the book, and then / opens the library", async ({ page, ai }) => {
   void ai;
   await page.goto("/");
+  await page.getByRole("link", { name: "Start with Meditations" }).first().click();
+  await page.waitForURL(/\/reader\?id=/);
+  await expect(page.locator(".reader-prose")).toContainText("Of my grandfather Verus");
+
+  await page.goto("/");
+  await expect(page.getByRole("heading", { name: "Library", exact: true })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Meditations", exact: true })).toBeVisible();
+
+  // Asking for the sample again opens the copy already there
+  await page.goto("/library?sample");
+  await page.waitForURL(/\/reader\?id=/);
+  await page.goto("/library");
+  await expect(page.getByRole("link", { name: "Meditations", exact: true })).toHaveCount(1);
+});
+
+test("a backup restores the library", async ({ page, ai }) => {
+  void ai;
+  await page.goto("/library");
   await page.getByRole("button", { name: "Try it with Meditations" }).click();
   await page.waitForURL(/\/reader\?id=/);
-  await page.goto("/");
+  await page.goto("/library");
 
   await page.getByRole("button", { name: "Library options" }).click();
   const [download] = await Promise.all([
@@ -35,7 +53,7 @@ test("a backup restores the library", async ({ page, ai }) => {
 });
 
 test("a file that isn't a backup is refused", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/library");
   await page.locator('input[type=file][accept*="json"]').setInputFiles({ name: "x.json", mimeType: "application/json", buffer: Buffer.from('{"hello":1}') });
   await expect(page.getByText("This isn’t a Paperless backup file.")).toBeVisible();
 });

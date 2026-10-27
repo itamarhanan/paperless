@@ -9,13 +9,28 @@ test("About says what Paperless is and leads into the app", async ({ page }) => 
   }
   await expect(page.getByRole("img", { name: /Paperless on a desktop/ })).toBeVisible();
 
+  await page.getByRole("main").getByRole("link", { name: "Open Paperless" }).click();
+  await expect(page).toHaveURL(/\/library$/);
+  await expect(page.getByRole("heading", { name: "Library", exact: true })).toBeVisible();
+});
+
+test("a first visit gets the front page, a returning reader the library", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle("Paperless: a reader for the books you already have");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Paperless");
   const jsonLd = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent())!);
   expect(jsonLd["@type"]).toBe("WebApplication");
-  expect(jsonLd.name).toBe("Paperless");
 
-  await page.getByRole("main").getByRole("link", { name: "Open Paperless" }).click();
-  await expect(page).toHaveURL(/\/$/);
+  // The contents lead to their chapters
+  await page.getByRole("navigation", { name: "Contents" }).getByRole("link", { name: "AI that labels and never writes" }).click();
+  await expect(page).toHaveURL(/#ai$/);
+  await expect(page.getByRole("heading", { name: "AI that labels and never writes" })).toBeInViewport();
+
+  // An empty library still shows the front page at "/"
+  await page.getByRole("link", { name: "Open your library" }).first().click();
   await expect(page.getByRole("heading", { name: "Library", exact: true })).toBeVisible();
+  await page.goto("/");
+  await expect(page.getByRole("heading", { level: 1 })).toHaveText("Paperless");
 });
 
 test("the public pages link to each other in reading order", async ({ page }) => {
@@ -32,7 +47,7 @@ test("the public pages link to each other in reading order", async ({ page }) =>
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Privacy");
 
   await page.getByRole("navigation", { name: "Next page" }).getByRole("link").click();
-  await expect(page).toHaveURL(/\/$/);
+  await expect(page).toHaveURL(/\/library$/);
 });
 
 test("the header shows where you are", async ({ page }) => {
@@ -42,11 +57,11 @@ test("the header shows where you are", async ({ page }) => {
 });
 
 test("the library links to the public pages", async ({ page }) => {
-  await page.goto("/");
+  await page.goto("/library");
   await page.getByRole("link", { name: "What Paperless does" }).click();
-  await expect(page).toHaveURL(/\/about$/);
+  await expect(page).toHaveURL(/\/$/);
 
-  await page.goto("/");
+  await page.goto("/library");
   await page.locator("footer").getByRole("link", { name: "How it works" }).click();
   await expect(page).toHaveURL(/\/how-it-works$/);
 });
@@ -59,9 +74,9 @@ test("public pages have a description and a canonical address; the reader and bo
     await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /opengraph-image/);
     await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
   }
-  for (const path of ["/reader", "/book"]) {
+  for (const path of ["/library", "/reader", "/book"]) {
     await page.goto(path);
-    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+    await expect(page.locator('meta[name="robots"]').first()).toHaveAttribute("content", /noindex/);
   }
 });
 

@@ -7,7 +7,7 @@ test("a PDF reads as clean text, with its chapters in the contents", async ({ pa
   const pdf = await makePdf(printer);
   await printer.close();
 
-  await page.goto("/");
+  await page.goto("/library");
   await expect(page.getByText("Your library is empty")).toBeVisible();
   await addFile(page, "the-reading-book.pdf", "application/pdf", pdf);
 
@@ -34,7 +34,7 @@ test("a PDF reads as clean text, with its chapters in the contents", async ({ pa
 
 test("an EPUB keeps its chapters, italics and title", async ({ page, ai }) => {
   void ai;
-  await page.goto("/");
+  await page.goto("/library");
   await addFile(page, "garden.epub", "application/epub+zip", makeEpub());
 
   await expect(page.locator(".reader-prose em").first()).toHaveText("italic words");
@@ -42,7 +42,7 @@ test("an EPUB keeps its chapters, italics and title", async ({ page, ai }) => {
   // "Roots" has no heading in its file; the book's own contents names it
   for (const title of ["Seeds", "Roots", "Leaves"]) await expect(contents.getByText(title, { exact: true })).toBeVisible();
 
-  await page.goto("/");
+  await page.goto("/library");
   await expect(page.getByRole("link", { name: "The Test Garden", exact: true })).toBeVisible();
 });
 
@@ -52,7 +52,7 @@ test("a scanned PDF explains why it can't be read", async ({ page, browser }) =>
   const scan = await printer.pdf({ format: "A5" });
   await printer.close();
 
-  await page.goto("/");
+  await page.goto("/library");
   await page.locator('input[type=file][accept*="pdf"]').setInputFiles({ name: "scan.pdf", mimeType: "application/pdf", buffer: scan });
   await expect(page.getByText(/scanned pages without text/)).toBeVisible({ timeout: 30_000 });
 });
