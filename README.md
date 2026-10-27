@@ -1,36 +1,66 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Paperless
 
-## Getting Started
+A reader for PDFs and EPUBs that turns them into clean pages you can read on a phone. I built it because I read a lot of books as PDFs, and every PDF reader I tried either showed me a tiny fixed page or a wall of broken text.
 
-First, run the development server:
+<p>
+  <img src="docs/iphone.png" alt="Meditations open in Paperless on an iPhone" width="260">
+  &nbsp;
+  <img src="docs/desktop.png" alt="The same book on a desktop" width="540">
+</p>
+
+## What it does
+
+- **Reads the book's structure, not just its text.** Chapters come from the PDF's outline and are matched to the headings on the page. Drop caps join their word again, epigraphs keep their credit line, and italics come from the font names in the file. Running heads and page numbers are removed. Praise, copyright and similar pages are hidden, with one tap in the contents to show them.
+- **Pages that fit the screen.** Each page is a screen of text you scroll, with a large Next button at the end that names the next chapter. Chapters always start a new page.
+- **EPUB and HTML books.** EPUBs are unzipped and read in the browser. Free books from Project Gutenberg come in through their HTML editions, which already mark chapters, quotes and verse.
+- **Discover.** Search Open Library and Project Gutenberg, or describe what you want to read and get suggestions. Every suggestion is looked up in Open Library first, so a book the model made up never shows.
+- **Your books stay on your device.** There are no accounts. The library lives in IndexedDB, and you can back it up to a file and restore it.
+
+## How the AI is allowed to help
+
+The AI never writes any of the book. For each page it gets the paragraphs with ids and answers with labels only: this paragraph is a heading, that one is a quote, this one is a stray page number to hide. It can also point at up to two key passages, which must be exact quotes from the paragraph.
+
+The server and the client both check every answer. Unknown ids are dropped. Passages that aren't word-for-word substrings of the page are dropped. Headings that came from the book's own contents can't be changed, and if the AI tries to hide more than a third of a page, none of its hiding is applied. "Show original" is on every page the AI touched.
+
+An earlier version asked the model to rewrite each page as clean text. A rewrite can paraphrase, or come back in a different language than the book's, and the reader has no way to tell. Labels can be wrong, but they can't put words in an author's mouth.
+
+## Running it
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
+pnpm install
+cp .env.example .env.local   # every key is optional
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Without any keys the reader works fully and the AI features ask for a key. Readers can add their own Gemini key in Appearance › Pages and AI; it stays in their browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+With the site's own keys, `AI_DAILY_LIMIT` caps the total AI requests per day, and each person gets an hourly allowance per feature. The counters live in memory, so on a serverless host each instance counts on its own. That's a rough guard against a runaway bill, not exact accounting.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## Tests
 
-## Learn More
+```bash
+pnpm lint
+pnpm typecheck
+pnpm test        # Playwright, on an iPhone viewport and a desktop one
+```
 
-To learn more about Next.js, take a look at the following resources:
+The end-to-end tests make their own books (a PDF printed by the browser, an EPUB zipped in memory, a Gutenberg-style page), so the repo has no copyrighted text in it. The AI is mocked with answers that include a made-up passage, which the reader must reject.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Layout
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+| Path | What's there |
+| --- | --- |
+| `lib/pdf-processor.ts` | PDF lines to paragraphs, headings, quotes, emphasis, front and back matter, and pages |
+| `lib/html-processor.ts` | The same for HTML books |
+| `lib/epub-processor.ts` | EPUB to one HTML book, with chapter titles from its own contents |
+| `lib/import.ts` | Every way a book gets into the library |
+| `hooks/use-page-cleanup.ts` | The background AI page check, and the checks on its answers |
+| `lib/ai-access.ts` | Which key pays for an AI request, and the limits |
+| `components/reader` | The reader: page, toolbars, contents, search, appearance, chat |
+| `app/api` | Downloading linked files, Gutenberg books and Open Library data, and the AI routes |
 
-## Deploy on Vercel
+Built with Next.js, React, Tailwind CSS, Radix, pdf.js, Dexie and the AI SDK (Gemini and Groq). The interface follows Apple's Human Interface Guidelines, translated to the web: toolbars that step aside while you read, 44-point touch targets, sheets on phones and panels on desktop, and AI that says what it did.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## License
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+MIT
