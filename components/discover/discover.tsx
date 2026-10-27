@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpRight, BookOpen, ChevronLeft, ChevronRight, Loader2, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SearchField } from "@/components/ui/search-field";
 import {
   Dialog,
   DialogContent,
@@ -144,24 +145,16 @@ export function Discover() {
             inputRef.current?.blur();
           }}
         >
-          <div className="relative flex-1">
-            {mode === "search" ? (
-              <Search className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            ) : (
-              <Sparkles className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" aria-hidden />
-            )}
-            <input
-              ref={inputRef}
-              type="search"
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              placeholder={mode === "search" ? "Title, author or subject" : "What would you like to read about?"}
-              aria-label={mode === "search" ? "Search books" : "Describe the books you’re looking for"}
-              enterKeyHint={mode === "search" ? "search" : "go"}
-              maxLength={mode === "search" ? 200 : 600}
-              className="h-11 w-full rounded-lg bg-muted pl-9 pr-3 text-[1.0625rem] outline-none placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring pointer-fine:h-10 pointer-fine:text-[0.9375rem]"
-            />
-          </div>
+          <SearchField
+            icon={mode === "search" ? Search : Sparkles}
+            ref={inputRef}
+            value={input}
+            onChange={(e) => setInput(e.target.value)}
+            placeholder={mode === "search" ? "Title, author or subject" : "What would you like to read about?"}
+            aria-label={mode === "search" ? "Search books" : "Describe the books you’re looking for"}
+            enterKeyHint={mode === "search" ? "search" : "go"}
+            maxLength={mode === "search" ? 200 : 600}
+          />
           <Button type="submit" disabled={!input.trim() || results.state === "loading"}>
             {mode === "search" ? "Search" : "Ask"}
           </Button>

@@ -34,6 +34,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
+import { SearchField } from "@/components/ui/search-field";
 import {
   exportLibrary,
   importDocument,
@@ -400,21 +401,14 @@ export function Library() {
             )}
 
             <div className="mb-2 flex items-center gap-2">
-              <div className="relative flex-1">
-                <Search
-                  className="pointer-events-none absolute left-3 top-1/2 size-4 -translate-y-1/2 text-muted-foreground"
-                  aria-hidden
-                />
-                <input
-                  type="search"
-                  value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Search library"
-                  aria-label="Search library"
-                  enterKeyHint="search"
-                  className="h-11 w-full rounded-lg bg-muted pl-9 pr-3 text-[1.0625rem] outline-none placeholder:text-muted-foreground focus-visible:outline-2 focus-visible:outline-ring pointer-fine:h-9 pointer-fine:text-[0.9375rem]"
-                />
-              </div>
+              <SearchField
+                icon={Search}
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search library"
+                aria-label="Search library"
+                enterKeyHint="search"
+              />
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
                   <Button variant="ghost" size="icon" aria-label="Sort">
