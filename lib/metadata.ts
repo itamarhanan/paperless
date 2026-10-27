@@ -27,7 +27,7 @@ export function pageMetadata({
   absoluteTitle?: boolean;
 }): Metadata {
   const shareTitle = absoluteTitle ? title : `${title} · Paperless`;
-  const images = [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Paperless: read PDFs and EPUBs as real books" }];
+  const images = [{ url: "/opengraph-image", width: 1200, height: 630, alt: "Paperless: a reader for the books you already have" }];
   return {
     title: absoluteTitle ? { absolute: title } : title,
     description,

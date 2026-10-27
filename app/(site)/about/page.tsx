@@ -3,7 +3,6 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Caption, NextPage, PageTitle, Prose, Screenshot } from "@/components/site/page-parts";
 import { pageMetadata } from "@/lib/metadata";
-import { SITE_URL } from "@/lib/site";
 import desktopLight from "@/public/screenshots/meditations-desktop-light.png";
 import desktopDark from "@/public/screenshots/meditations-desktop-dark.png";
 import iphoneLight from "@/public/screenshots/meditations-iphone-light.png";
@@ -19,41 +18,10 @@ export const metadata = pageMetadata({
   path: "/about",
 });
 
-const jsonLd = {
-  "@context": "https://schema.org",
-  "@type": "WebApplication",
-  name: "Paperless",
-  url: SITE_URL,
-  description: DESCRIPTION,
-  applicationCategory: "ReferenceApplication",
-  operatingSystem: "Any",
-  browserRequirements: "Requires a modern web browser with JavaScript.",
-  isAccessibleForFree: true,
-  offers: { "@type": "Offer", price: "0", priceCurrency: "USD" },
-  image: `${SITE_URL}/opengraph-image`,
-  screenshot: [
-    `${SITE_URL}/screenshots/meditations-iphone-light.png`,
-    `${SITE_URL}/screenshots/meditations-desktop-light.png`,
-  ],
-  featureList: [
-    "Reads PDF and EPUB books",
-    "Chapters from the PDF outline, headings from font sizes",
-    "Removes running heads and page numbers",
-    "Hides front and back matter",
-    "Free books from Project Gutenberg",
-    "Library stored on your device, with backup and restore",
-    "AI labels layout without changing the text",
-  ],
-  author: { "@type": "Person", name: "Itamar Hanan", url: "https://itamar-hanan.web.app" },
-};
 
 export default function AboutPage() {
   return (
     <article>
-      <script
-        type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
-      />
 
       <PageTitle
         title="Read PDF and EPUB books as clean pages"
@@ -61,7 +29,7 @@ export default function AboutPage() {
       />
       <div className="mx-auto mt-8 flex max-w-[42.5rem] flex-wrap items-center gap-2">
         <Button asChild size="lg" className="font-semibold">
-          <Link href="/">Open Paperless</Link>
+          <Link href="/library">Open Paperless</Link>
         </Button>
         <Button asChild size="lg" variant="ghost" className="font-semibold">
           <Link href="/how-it-works">

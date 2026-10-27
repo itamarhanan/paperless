@@ -1,11 +1,45 @@
 import { ImageResponse } from "next/og";
+import { MARK_CORNER, MARK_PAGE } from "@/components/brand/logo";
 
-export const alt = "Paperless: read PDFs and EPUBs as real books";
+export const alt = "Paperless: a reader for the books you already have";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
-/** The link preview: a page of a book, in the reader's own black and white. */
-export default function OpenGraphImage() {
+const TITLE = "Paperless";
+const SUBTITLE = "A reader for the books you already have.";
+const LEDE = "Open a PDF or EPUB and read it as pages that fit your screen.";
+const IMPRINT = "FREE · NO ACCOUNT · YOUR BOOKS STAY ON YOUR DEVICE";
+
+/**
+ * A Google font as a static TTF (the image renderer can't read WOFF2 or
+ * variable fonts), cut down to the characters drawn here. Without the network
+ * the image still renders, in the default face.
+ */
+async function googleFont(family: string, axis: string, text: string) {
+  try {
+    const css = await fetch(
+      `https://fonts.googleapis.com/css2?family=${family}:${axis}&text=${encodeURIComponent(text)}`
+    ).then((r) => r.text());
+    const url = css.match(/src: url\((.+?)\) format\('(?:opentype|truetype)'\)/)?.[1];
+    return url ? await fetch(url).then((r) => r.arrayBuffer()) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** The link preview: the front page's title page, in the reader's black and white. */
+export default async function OpenGraphImage() {
+  const [roman, italic, sans] = await Promise.all([
+    googleFont("Literata", "wght@500", TITLE),
+    googleFont("Literata", "ital,wght@1,400", SUBTITLE),
+    googleFont("Inter", "wght@400", LEDE + IMPRINT),
+  ]);
+  const fonts = [
+    ...(sans ? [{ name: "Inter", data: sans, weight: 400 as const, style: "normal" as const }] : []),
+    ...(roman ? [{ name: "Literata", data: roman, weight: 500 as const, style: "normal" as const }] : []),
+    ...(italic ? [{ name: "Literata", data: italic, weight: 400 as const, style: "italic" as const }] : []),
+  ];
+
   return new ImageResponse(
     (
       <div
@@ -13,48 +47,33 @@ export default function OpenGraphImage() {
           width: "100%",
           height: "100%",
           display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
           background: "#fcfcfc",
-          color: "#111",
-          padding: "72px 88px",
-          fontFamily: "serif",
+          color: "#141414",
+          padding: "0 96px 56px",
+          fontFamily: "Inter, sans-serif",
         }}
       >
-        <div style={{ display: "flex", flexDirection: "column", flex: 1, justifyContent: "space-between" }}>
-          <div style={{ display: "flex", fontFamily: "sans-serif", fontSize: 30, fontWeight: 700, letterSpacing: -0.5 }}>
-            Paperless
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", flex: 1 }}>
+          <div style={{ fontFamily: "Literata, serif", fontWeight: 500, fontSize: 136, lineHeight: 1, letterSpacing: -3 }}>
+            {TITLE}
           </div>
-          <div style={{ display: "flex", flexDirection: "column" }}>
-            <div style={{ fontSize: 76, lineHeight: 1.05, letterSpacing: -2, maxWidth: 820 }}>
-              Read PDFs and EPUBs as real books.
-            </div>
-            <div style={{ marginTop: 28, fontSize: 32, color: "#555", fontFamily: "sans-serif", maxWidth: 820, lineHeight: 1.35 }}>
-              AI tidies the layout. It never changes the words.
-            </div>
+          <div style={{ marginTop: 26, fontFamily: "Literata, serif", fontStyle: "italic", fontSize: 46, color: "#5c5c5c" }}>
+            {SUBTITLE}
           </div>
+          <div style={{ marginTop: 40, width: 64, height: 2, background: "#c8c8c8" }} />
+          <div style={{ marginTop: 36, fontSize: 28, color: "#5c5c5c" }}>{LEDE}</div>
         </div>
-        <div
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            width: 300,
-            marginLeft: 48,
-            padding: "40px 32px",
-            border: "2px solid #111",
-            borderRadius: 16,
-            fontSize: 22,
-            lineHeight: 1.6,
-            color: "#222",
-          }}
-        >
-          <div style={{ fontSize: 15, fontFamily: "sans-serif", color: "#777", marginBottom: 18 }}>Book Two</div>
-          <div style={{ fontSize: 30, marginBottom: 18 }}>Meditations</div>
-          <div style={{ display: "flex" }}>
-            Begin the morning by saying to thyself, I shall meet with the busy-body, the ungrateful, arrogant…
-          </div>
-          <div style={{ display: "flex", marginTop: "auto", height: 4, background: "#111", width: "38%" }} />
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center" }}>
+          <svg width="40" height="40" viewBox="0 0 32 32" fill="#141414">
+            <path fillRule="evenodd" d={MARK_PAGE} />
+            <path d={MARK_CORNER} />
+          </svg>
+          <div style={{ marginTop: 14, fontSize: 17, letterSpacing: 3, color: "#5c5c5c" }}>{IMPRINT}</div>
         </div>
       </div>
     ),
-    size
+    { ...size, fonts }
   );
 }

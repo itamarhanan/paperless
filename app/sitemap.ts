@@ -5,11 +5,11 @@ import { SITE_URL } from "@/lib/site";
 /** The pages anyone can read. The reader and each book exist only on a reader’s own device. */
 export default function sitemap(): MetadataRoute.Sitemap {
   return [
-    { url: SITE_URL, changeFrequency: "monthly", priority: 0.8 },
+    { url: SITE_URL, changeFrequency: "monthly", priority: 1 },
     ...PUBLIC_PAGES.map(({ path }) => ({
       url: `${SITE_URL}${path}`,
       changeFrequency: "monthly" as const,
-      priority: path === "/about" ? 1 : path === "/privacy" ? 0.4 : 0.7,
+      priority: path === "/about" ? 0.8 : path === "/privacy" ? 0.4 : 0.7,
     })),
   ];
 }

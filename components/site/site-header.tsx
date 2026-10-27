@@ -2,13 +2,14 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { LogoMark } from "@/components/brand/logo";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
-// On phones the name itself leads to About, so the bar keeps room for the button
+// On phones the bar keeps the name and the button; the front page and the footer link to the rest
 const NAV = [
-  { href: "/about", label: "About", wide: true },
-  { href: "/how-it-works", label: "How it works", wide: false },
+  { href: "/about", label: "About" },
+  { href: "/how-it-works", label: "How it works" },
 ];
 
 /**
@@ -22,13 +23,15 @@ export function SiteHeader() {
     <header className="bar-glass pt-safe sticky top-0 z-40 border-b">
       <div className="px-safe mx-auto flex h-14 max-w-5xl items-center gap-1 sm:px-6">
         <Link
-          href="/about"
-          className="-ml-2 mr-auto flex h-11 items-center rounded-md px-2 text-[1.0625rem] font-semibold tracking-tight"
+          href="/"
+          aria-current={pathname === "/" ? "page" : undefined}
+          className="-ml-2 mr-auto flex h-11 items-center gap-2 rounded-md px-2 text-[1.0625rem] font-semibold tracking-tight"
         >
+          <LogoMark className="size-[1.375rem]" />
           Paperless
         </Link>
         <nav aria-label="Site" className="flex items-center">
-          {NAV.map(({ href, label, wide }) => {
+          {NAV.map(({ href, label }) => {
             const current = pathname === href;
             return (
               <Link
@@ -36,9 +39,8 @@ export function SiteHeader() {
                 href={href}
                 aria-current={current ? "page" : undefined}
                 className={cn(
-                  "flex h-11 items-center whitespace-nowrap rounded-md px-2.5 text-[0.9375rem] text-muted-foreground transition-colors hover:text-foreground sm:px-3",
-                  current && "font-medium text-foreground",
-                  wide && "hidden sm:flex"
+                  "hidden h-11 items-center whitespace-nowrap rounded-md px-3 text-[0.9375rem] text-muted-foreground transition-colors hover:text-foreground sm:flex",
+                  current && "font-medium text-foreground"
                 )}
               >
                 {label}
@@ -47,7 +49,7 @@ export function SiteHeader() {
           })}
         </nav>
         <Button asChild className="-mr-1 ml-1 shrink-0 font-semibold pointer-coarse:px-3.5 sm:ml-3">
-          <Link href="/">Open Paperless</Link>
+          <Link href="/library">Open Paperless</Link>
         </Button>
       </div>
     </header>
