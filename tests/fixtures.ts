@@ -78,7 +78,17 @@ type AiCalls = { enhance: number };
  * and an AI that answers with labels only: it marks the last plain paragraph
  * of a page as a quote and picks one key passage (plus one it must reject).
  */
-export const test = base.extend<{ ai: AiCalls }>({
+export const test = base.extend<{ ai: AiCalls; tourSeen: boolean; seedTour: void }>({
+  // The sample opens with the guided tour. Other tests start as returning readers;
+  // the tour's own tests opt out with test.use({ tourSeen: false }).
+  tourSeen: [true, { option: true }],
+  seedTour: [
+    async ({ page, tourSeen }, use) => {
+      if (tourSeen) await page.addInitScript(() => localStorage.setItem("paperless:tour-seen", "1"));
+      await use();
+    },
+    { auto: true },
+  ],
   ai: async ({ page }, use) => {
     const calls: AiCalls = { enhance: 0 };
     await page.route("**/api/enhance", async (route) => {
