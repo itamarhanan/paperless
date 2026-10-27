@@ -28,6 +28,7 @@ export function ChatPanel() {
   const { messages, sendMessage, status, error, stop, regenerate, clearError } = useChat({
     id: docId ?? undefined,
     transport,
+    experimental_throttle: 50,
   });
 
   const [input, setInput] = useState("");
