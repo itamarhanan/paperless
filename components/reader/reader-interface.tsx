@@ -74,6 +74,10 @@ export function ReaderInterface() {
         return;
       }
 
+      // A link to a page (from the book's details) opens there instead of where reading left off
+      const asked = Number(new URLSearchParams(window.location.search).get("page"));
+      const requested = Number.isInteger(asked) && asked >= 1 ? asked : null;
+
       setState("loading");
       const [saved, savedSettings, position] = await Promise.all([
         getDocument(id),
@@ -93,8 +97,10 @@ export function ReaderInterface() {
       }
 
       useReaderStore.getState().setSettings(savedSettings);
-      useReaderStore.getState().load(id, doc, position?.page ?? 1);
-      restoreScroll.current = position?.scrollPosition ?? 0;
+      useReaderStore.getState().load(id, doc, requested ?? position?.page ?? 1);
+      restoreScroll.current = requested ? 0 : (position?.scrollPosition ?? 0);
+      // Drop the page from the address, so a reload returns to the saved position
+      if (requested) window.history.replaceState(null, "", `/reader?id=${encodeURIComponent(id)}`);
       lastPagination.current = paginationKey(savedSettings);
       setState("ready");
       void touchDocument(id);

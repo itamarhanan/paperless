@@ -10,6 +10,7 @@ import {
   ChevronLeft,
   Copy,
   Ellipsis,
+  Info,
   ListTree,
   MessageCircle,
   PanelLeft,
@@ -225,6 +226,13 @@ function MoreMenu({ onCleanNow }: { onCleanNow: (page: number) => void }) {
         <DropdownMenuItem onSelect={copyPage}>
           <Copy /> Copy page text
         </DropdownMenuItem>
+        {docId && (
+          <DropdownMenuItem asChild>
+            <Link href={`/book?id=${encodeURIComponent(docId)}&from=reader`}>
+              <Info /> Book details
+            </Link>
+          </DropdownMenuItem>
+        )}
         <DropdownMenuSeparator />
         <DropdownMenuItem variant="destructive" onSelect={remove}>
           <Trash2 /> Remove from library
