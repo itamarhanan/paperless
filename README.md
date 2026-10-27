@@ -16,7 +16,7 @@ A reader for PDFs and EPUBs that turns them into clean pages you can read on a p
 - **Discover.** Search Open Library and Project Gutenberg, or describe what you want to read and get suggestions. Every suggestion is looked up in Open Library first, so a book the model made up never shows.
 - **Your books stay on your device.** There are no accounts. The library lives in IndexedDB, and you can back it up to a file and restore it.
 
-## How the AI is allowed to help
+## What AI does
 
 The AI never writes any of the book. For each page it gets the paragraphs with ids and answers with labels only: this paragraph is a heading, that one is a quote, this one is a stray page number to hide. It can also point at up to two key passages, which must be exact quotes from the paragraph.
 
@@ -58,10 +58,10 @@ The end-to-end tests make their own books (a PDF printed by the browser, an EPUB
 | `lib/ai-access.ts` | Which key pays for an AI request, and the limits |
 | `components/reader` | The reader: page, toolbars, contents, search, appearance, chat |
 | `app/api` | Downloading linked files, Gutenberg books and Open Library data, and the AI routes |
-| `app/(site)`, `proxy.ts` | The front page and the public pages; `/` shows the library instead once you have a book |
+| `app/(site)`, `proxy.ts` | The public pages; `/` shows the library after you add a book |
 | `docs/brand` | The app icon sources. The mark is a page with its corner lifting, like the reader's page turn |
 
-Built with Next.js, React, Tailwind CSS, Radix, pdf.js, Dexie and the AI SDK (Gemini and Groq). The interface follows Apple's Human Interface Guidelines, translated to the web: toolbars that step aside while you read, 44-point touch targets, sheets on phones and panels on desktop, and AI that says what it did.
+Built with Next.js, React, Tailwind CSS, Radix, pdf.js, Dexie and the AI SDK (Gemini and Groq). The toolbars hide while you read. Controls are sized for touch, and appearance settings open in a sheet on phones or a panel on desktop. Pages touched by AI say what changed and keep a link to the original.
 
 ## License
 
