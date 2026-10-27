@@ -29,6 +29,7 @@ import {
   DropdownMenuLabel,
   DropdownMenuRadioGroup,
   DropdownMenuRadioItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import {
@@ -384,6 +385,12 @@ export function Library() {
                 </DropdownMenuItem>
                 <DropdownMenuItem onSelect={() => backupInput.current?.click()}>
                   <Upload /> Restore from backup…
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link href="/">
+                    <Info /> What Paperless does
+                  </Link>
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
