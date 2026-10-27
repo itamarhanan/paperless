@@ -51,7 +51,7 @@ test("the library links to the public pages", async ({ page }) => {
   await expect(page).toHaveURL(/\/how-it-works$/);
 });
 
-test("public pages have a description and a canonical address; the reader isn’t indexed", async ({ page }) => {
+test("public pages have a description and a canonical address; the reader and book pages aren’t indexed", async ({ page }) => {
   for (const path of ["/about", "/how-it-works", "/privacy", "/discover"]) {
     await page.goto(path);
     await expect(page.locator('meta[name="description"]')).toHaveAttribute("content", /.{60,}/);
@@ -59,8 +59,10 @@ test("public pages have a description and a canonical address; the reader isn’
     await expect(page.locator('meta[property="og:image"]')).toHaveAttribute("content", /opengraph-image/);
     await expect(page.locator('meta[name="robots"]')).toHaveCount(0);
   }
-  await page.goto("/reader");
-  await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  for (const path of ["/reader", "/book"]) {
+    await page.goto(path);
+    await expect(page.locator('meta[name="robots"]')).toHaveAttribute("content", /noindex/);
+  }
 });
 
 test("sitemap.xml and robots.txt list the right pages", async ({ request }) => {
@@ -71,6 +73,7 @@ test("sitemap.xml and robots.txt list the right pages", async ({ request }) => {
     expect(xml).toMatch(new RegExp(`<loc>[^<]*${path}</loc>`));
   }
   expect(xml).not.toContain("/reader");
+  expect(xml).not.toContain("/book");
 
   const robots = await request.get("/robots.txt");
   expect(robots.ok()).toBe(true);
