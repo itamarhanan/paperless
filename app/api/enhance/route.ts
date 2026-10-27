@@ -1,6 +1,6 @@
-import { google } from "@ai-sdk/google";
 import { generateText, Output } from "ai";
 import { z } from "zod";
+import { aiAccess } from "@/lib/ai-access";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -51,12 +51,15 @@ export async function POST(req: Request) {
     return Response.json({ error: "Page is too long to check" }, { status: 413 });
   }
 
+  const access = aiAccess(req, "enhance");
+  if (!access.ok) return access.response;
+
   const byId = new Map(input.paragraphs.map((p) => [p.id, p]));
   const listing = input.paragraphs.map((p) => `[${p.id}] (${p.kind ?? "text"}) ${p.text}`).join("\n\n");
 
   try {
     const { output: object } = await generateText({
-      model: google(MODEL),
+      model: access.google(MODEL),
       output: Output.object({ schema: resultSchema }),
       temperature: 0.1,
       prompt: `You check the layout of one page of a book${input.title ? ` ("${input.title}")` : ""} whose text was extracted from a PDF. Each paragraph has an id and the label the extraction gave it: heading N (1 chapter, 2 section, 3 subsection), text, quote, attribution (the credit under a quote).

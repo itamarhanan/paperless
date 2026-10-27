@@ -1,6 +1,6 @@
-import { google } from "@ai-sdk/google";
 import { generateText, Output } from "ai";
 import { z } from "zod";
+import { aiAccess } from "@/lib/ai-access";
 import { findOnOpenLibrary, normalize, searchGutenberg, type DiscoverBook } from "@/lib/discover";
 
 export const runtime = "nodejs";
@@ -39,10 +39,13 @@ export async function POST(req: Request) {
     return Response.json({ error: "Describe what you'd like to read in a sentence or two." }, { status: 400 });
   }
 
+  const access = aiAccess(req, "ask");
+  if (!access.ok) return access.response;
+
   let suggestions: z.infer<typeof suggestionsSchema>["books"];
   try {
     const { output } = await generateText({
-      model: google(MODEL),
+      model: access.google(MODEL),
       output: Output.object({ schema: suggestionsSchema }),
       temperature: 0.4,
       abortSignal: AbortSignal.timeout(30000),

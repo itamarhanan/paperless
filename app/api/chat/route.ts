@@ -1,5 +1,6 @@
 import { convertToModelMessages, streamText, type UIMessage } from "ai";
 import { groq } from "@ai-sdk/groq";
+import { aiAccess } from "@/lib/ai-access";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -8,6 +9,8 @@ const MAX_CONTEXT = 20000;
 const MAX_MESSAGES = 30;
 // Groq retires models regularly (llama-3.3-70b-versatile is gone); override with CHAT_MODEL
 const MODEL = process.env.CHAT_MODEL || "openai/gpt-oss-120b";
+// Used with a reader's own Gemini key, or when the site has no Groq key
+const GEMINI_MODEL = process.env.CHAT_GEMINI_MODEL || "gemini-2.5-flash";
 
 function error(message: string, status: number) {
   return Response.json({ error: message }, { status });
@@ -26,6 +29,11 @@ export async function POST(req: Request) {
     return error("`messages` must be a non-empty array", 400);
   }
 
+  const access = aiAccess(req, "chat");
+  if (!access.ok) return access.response;
+  const model =
+    access.ownKey || !process.env.GROQ_API_KEY ? access.google(GEMINI_MODEL) : groq(MODEL);
+
   const context = typeof body.context === "string" ? body.context.slice(0, MAX_CONTEXT) : "";
   const title = typeof body.title === "string" ? body.title.slice(0, 200) : "this document";
   const page = typeof body.page === "number" ? body.page : null;
@@ -36,7 +44,7 @@ export async function POST(req: Request) {
     .slice(-MAX_MESSAGES);
 
   const result = streamText({
-    model: groq(MODEL),
+    model,
     system: `You are a reading companion inside a document reader. The reader is reading "${title}"${
       page ? `, currently on page ${page}` : ""
     }.
