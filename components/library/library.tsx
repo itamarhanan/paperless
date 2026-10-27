@@ -12,6 +12,7 @@ import {
   Compass,
   Ellipsis,
   FileText,
+  Info,
   Link2,
   Pencil,
   Plus,
@@ -145,7 +146,14 @@ export function Library() {
             throw new Error(
               "No readable text found. Scanned PDFs aren’t supported yet.",
             );
-          const id = await importDocument(doc);
+          const id = await importDocument(
+            doc,
+            "file" in source
+              ? { kind: "file", name: source.file.name }
+              : "url" in source
+                ? { kind: "link", url: source.url }
+                : { kind: "gutenberg", id: source.gutenberg },
+          );
           setJobs((all) => all.filter((j) => j.key !== job.key));
           if (openWhenDone) router.push(`/reader?id=${encodeURIComponent(id)}`);
           else {
@@ -609,6 +617,11 @@ function DocumentRow({
           </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end">
+          <DropdownMenuItem asChild>
+            <Link href={`/book?id=${encodeURIComponent(doc.id)}`}>
+              <Info /> Book details
+            </Link>
+          </DropdownMenuItem>
           <DropdownMenuItem onSelect={onRename}>
             <Pencil /> Rename
           </DropdownMenuItem>
