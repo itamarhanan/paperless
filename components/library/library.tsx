@@ -33,7 +33,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonRow } from "@/components/ui/skeleton";
 import { SearchField } from "@/components/ui/search-field";
 import {
   exportLibrary,
@@ -51,7 +51,6 @@ import { rememberLibrary } from "@/lib/library-cookie";
 import { BookCover } from "@/components/book/book-cover";
 import { removeWithUndo } from "@/lib/remove-with-undo";
 import { timeAgo } from "@/lib/text";
-import { cn } from "@/lib/utils";
 import { tourSeen } from "@/lib/tour";
 import { useIsClient } from "@/hooks/use-is-client";
 
@@ -784,13 +783,7 @@ function LibrarySkeleton() {
     <div aria-busy="true" aria-label="Loading library" className="space-y-1">
       <Skeleton className="mb-4 h-11 w-full rounded-lg" />
       {Array.from({ length: 4 }, (_, i) => (
-        <div key={i} className={cn("flex items-center gap-3 py-3")}>
-          <Skeleton className="h-14 w-11" />
-          <div className="flex-1 space-y-2">
-            <Skeleton className="h-4 w-2/3" />
-            <Skeleton className="h-3 w-1/3" />
-          </div>
-        </div>
+        <SkeletonRow key={i} />
       ))}
     </div>
   );

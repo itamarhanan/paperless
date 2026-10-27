@@ -5,7 +5,7 @@ import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowUpRight, BookOpen, ChevronLeft, ChevronRight, Loader2, Search, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Skeleton } from "@/components/ui/skeleton";
+import { Skeleton, SkeletonRow } from "@/components/ui/skeleton";
 import { SearchField } from "@/components/ui/search-field";
 import {
   Dialog,
@@ -459,12 +459,8 @@ function ResultsSkeleton({ label }: { label: string }) {
       </p>
       <ul className="divide-y" aria-hidden>
         {Array.from({ length: 5 }, (_, i) => (
-          <li key={i} className="flex items-center gap-3 py-3">
-            <Skeleton className="h-16 w-11" />
-            <div className="flex-1 space-y-2">
-              <Skeleton className="h-4 w-2/3" />
-              <Skeleton className="h-3 w-1/3" />
-            </div>
+          <li key={i}>
+            <SkeletonRow cover="h-16 w-11" />
           </li>
         ))}
       </ul>
