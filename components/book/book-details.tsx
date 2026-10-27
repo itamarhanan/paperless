@@ -10,13 +10,11 @@ import { Switch } from "@/components/ui/switch";
 import { Skeleton } from "@/components/ui/skeleton";
 import { RenameDialog } from "@/components/library/library-dialogs";
 import {
-  deleteDocument,
   getDocument,
   loadBookmarks,
   loadReadingPosition,
   loadSettings,
   renameDocument,
-  restoreDocument,
   saveSettings,
   updateDocument,
   type Bookmark,
@@ -24,6 +22,7 @@ import {
   type Position,
   type SavedDocument,
 } from "@/lib/storage";
+import { removeWithUndo } from "@/lib/remove-with-undo";
 import {
   paginationKey,
   renderAiPages,
@@ -146,13 +145,8 @@ export function BookDetails() {
   }
 
   const removeBook = async () => {
-    const deleted = await deleteDocument(id);
+    await removeWithUndo(id);
     router.push("/library");
-    if (deleted) {
-      toast(`Removed “${deleted.saved.title}”`, {
-        action: { label: "Undo", onClick: () => void restoreDocument(deleted) },
-      });
-    }
   };
 
   const removeAi = async () => {

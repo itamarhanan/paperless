@@ -34,7 +34,7 @@ import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/compone
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useReaderStore, type ReaderPanel } from "@/lib/store/reader-store";
 import { useBookmarks } from "@/hooks/use-bookmarks";
-import { deleteDocument, restoreDocument } from "@/lib/storage";
+import { removeWithUndo } from "@/lib/remove-with-undo";
 import { pageHasAiChanges, pagePassages } from "@/lib/pdf-processor";
 import { AppearanceControls } from "./appearance-controls";
 import { SearchControls } from "./search-controls";
@@ -202,13 +202,8 @@ function MoreMenu({ onCleanNow }: { onCleanNow: (page: number) => void }) {
 
   const remove = async () => {
     if (!docId) return;
-    const deleted = await deleteDocument(docId);
+    await removeWithUndo(docId);
     router.push("/library");
-    if (deleted) {
-      toast(`Removed “${deleted.saved.title}”`, {
-        action: { label: "Undo", onClick: () => void restoreDocument(deleted) },
-      });
-    }
   };
 
   return (

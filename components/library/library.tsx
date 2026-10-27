@@ -35,7 +35,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
-  deleteDocument,
   exportLibrary,
   importDocument,
   importLibrary,
@@ -44,11 +43,11 @@ import {
   loadAllPositions,
   loadSettings,
   renameDocument,
-  restoreDocument,
   type Position,
   type SavedDocument,
 } from "@/lib/storage";
 import { rememberLibrary } from "@/lib/library-cookie";
+import { removeWithUndo } from "@/lib/remove-with-undo";
 import { timeAgo } from "@/lib/text";
 import { cn } from "@/lib/utils";
 import { tourSeen } from "@/lib/tour";
@@ -265,13 +264,8 @@ export function Library() {
   }, [importFiles]);
 
   const remove = async (doc: SavedDocument) => {
-    const deleted = await deleteDocument(doc.id);
-    setDocs((all) => all?.filter((d) => d.id !== doc.id) ?? null);
-    if (deleted) {
-      toast(`Removed “${doc.title}”`, {
-        action: { label: "Undo", onClick: () => void restoreDocument(deleted) },
-      });
-    }
+    const removed = await removeWithUndo(doc.id);
+    if (removed) setDocs((all) => all?.filter((d) => d.id !== doc.id) ?? null);
   };
 
   const visible = useMemo(() => {
