@@ -476,15 +476,29 @@ function fontStyle(page: PDFPageProxy, fontName: string, cache: Map<string, numb
   }
 }
 
+/**
+ * page.getTextContent() reads its stream with `for await`, which needs
+ * ReadableStream async iteration: missing in WebKit, so every iOS browser
+ * throws. A plain reader loop gets the same items everywhere.
+ */
+async function textItems(page: PDFPageProxy) {
+  const reader = page.streamTextContent().getReader();
+  const items: Awaited<ReturnType<PDFPageProxy["getTextContent"]>>["items"] = [];
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) return items;
+    items.push(...value.items);
+  }
+}
+
 async function readLines(page: PDFPageProxy, fontCache: Map<string, number>): Promise<Line[]> {
   try {
     await page.getOperatorList(); // loads the page's fonts, so their names are known
   } catch {
     // Styles are a nicety; the text is still readable without them
   }
-  const textContent = await page.getTextContent();
   const items: TextItem[] = [];
-  for (const item of textContent.items) {
+  for (const item of await textItems(page)) {
     if (!("str" in item) || !item.str.trim()) continue;
     const [, , , height, x, y] = item.transform;
     items.push({
