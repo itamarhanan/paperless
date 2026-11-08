@@ -6,6 +6,9 @@ interface Shortcuts {
   onNextPage?: () => void;
   onPrevPage?: () => void;
   onSearch?: () => void;
+  onToggleListen?: () => void;
+  /** One sentence back or forward in reading aloud. */
+  onListenSkip?: (delta: number) => void;
 }
 
 /** Elements that use arrow keys or typing themselves. */
@@ -19,8 +22,9 @@ function ownsKeyboard(target: EventTarget | null): boolean {
 }
 
 /**
- * Reader shortcuts. ← → turn pages and / opens search. Modified keys are
- * left alone so system and browser shortcuts (⌘F, ⌘T…) keep working.
+ * Reader shortcuts. ← → turn pages, / opens search, l toggles reading aloud,
+ * and , . skip a sentence. Modified keys are left alone so system and
+ * browser shortcuts (⌘F, ⌘T…) keep working.
  */
 export function useKeyboardShortcuts(shortcuts: Shortcuts) {
   // Always sees the latest handlers without re-subscribing on every render
@@ -40,6 +44,18 @@ export function useKeyboardShortcuts(shortcuts: Shortcuts) {
       case "/":
         e.preventDefault();
         shortcuts.onSearch?.();
+        break;
+      case "l":
+        if (shortcuts.onToggleListen) e.preventDefault();
+        shortcuts.onToggleListen?.();
+        break;
+      case ",":
+        if (shortcuts.onListenSkip) e.preventDefault();
+        shortcuts.onListenSkip?.(-1);
+        break;
+      case ".":
+        if (shortcuts.onListenSkip) e.preventDefault();
+        shortcuts.onListenSkip?.(1);
         break;
     }
   });
