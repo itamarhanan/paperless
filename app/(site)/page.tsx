@@ -14,7 +14,7 @@ import passageLight from "@/public/screenshots/meditations-passage-light.png";
 import passageDark from "@/public/screenshots/meditations-passage-dark.png";
 
 const DESCRIPTION =
-  "Read PDFs and EPUBs as pages sized for your screen. Keep chapters and italics, lose running heads and page numbers. Your library stays in your browser.";
+  "Read PDFs, EPUBs and Word documents as pages sized for your screen. Keep chapters and italics, lose running heads and page numbers. Your library stays in your browser.";
 
 export const metadata = pageMetadata({
   title: "Paperless: a reader for the books you already have",
@@ -40,7 +40,7 @@ const jsonLd = {
     `${SITE_URL}/screenshots/meditations-desktop-light.png`,
   ],
   featureList: [
-    "Reads PDF and EPUB books",
+    "Reads PDF, EPUB and Word documents",
     "Chapters from the PDF outline, headings from font sizes",
     "Removes running heads and page numbers",
     "Hides front and back matter",
@@ -60,7 +60,7 @@ const FEATURES: {
   {
     icon: FileText,
     title: "Any book you have",
-    text: "Import a PDF or EPUB from your device, paste a link to one, or find a free classic in Discover. Files up to 50 MB.",
+    text: "Import a PDF, EPUB or Word document from your device, paste a link to one, or find a free classic in Discover. Files up to 50 MB.",
     link: { href: "/discover", label: "Find a free book" },
   },
   {
@@ -103,8 +103,9 @@ export default function FrontPage() {
               Read the books you already have.
             </h1>
             <p className="mx-auto mt-5 max-w-xl text-pretty text-lg leading-relaxed text-muted-foreground sm:text-xl">
-              Open a PDF or EPUB to read one screen at a time. Chapters, italics and quotes stay; running heads and page
-              numbers go.
+              Open a PDF, EPUB or Word document to read one screen at a time.
+              Chapters, italics and quotes stay; running heads and page numbers
+              go.
             </p>
             <div className="mt-8 flex flex-col justify-center gap-2 sm:flex-row">
               <Button asChild size="lg" className="font-semibold">

@@ -15,10 +15,10 @@ import iphoneLight from "@/public/screenshots/meditations-iphone-light.png";
 import iphoneDark from "@/public/screenshots/meditations-iphone-dark.png";
 
 const DESCRIPTION =
-  "Read PDFs and EPUBs as pages sized for your screen. Paperless keeps chapters and formatting, removes page numbers and running heads, and stores your library in your browser.";
+  "Read PDFs, EPUBs and Word documents as pages sized for your screen. Paperless keeps chapters and formatting, removes page numbers and running heads, and stores your library in your browser.";
 
 export const metadata = pageMetadata({
-  title: "Paperless: read PDF and EPUB books as clean pages",
+  title: "Paperless: read PDF, EPUB and Word documents as clean pages",
   absoluteTitle: true,
   description: DESCRIPTION,
   path: "/about",
@@ -28,8 +28,8 @@ export default function AboutPage() {
   return (
     <article>
       <PageTitle
-        title="Read PDF and EPUB books as clean pages"
-        lede="Paperless turns a PDF or EPUB into pages sized for your screen. It keeps the book’s chapters, headings, quotes and italics, and removes page numbers and running heads. Your library stays in your browser."
+        title="Read PDF, EPUB and Word documents as clean pages"
+        lede="Paperless turns a PDF, an EPUB or a Word document into pages sized for your screen. It keeps the book’s chapters, headings, quotes and italics, and removes page numbers and running heads. Your library stays in your browser."
       />
       <div className="mx-auto mt-8 flex max-w-170 flex-wrap items-center gap-2">
         <Button asChild size="lg" className="font-semibold">
@@ -109,10 +109,12 @@ export default function AboutPage() {
           begins.
         </p>
         <p>
-          <strong>EPUBs and free books work too.</strong> EPUB files are
-          unzipped and read in your browser. Discover searches Open Library and
-          Project Gutenberg, and Gutenberg’s books come in through their HTML
-          editions, which already mark chapters, quotes and verse.
+          <strong>EPUBs, Word documents and free books work too.</strong> EPUB
+          files are unzipped and read in your browser, as are Word’s .docx
+          articles with their headings, italics and lists. Discover searches
+          Open Library and Project Gutenberg, and Gutenberg’s books come in
+          through their HTML editions, which already mark chapters, quotes and
+          verse.
         </p>
         <p>
           <strong>You set the page.</strong> Light, sepia and dark themes;
@@ -123,9 +125,9 @@ export default function AboutPage() {
 
         <h2>Who it’s for</h2>
         <p>
-          Anyone with books as PDF or EPUB files who wants to read them on a
-          phone without zooming, or at a desk without a fixed page floating in
-          the middle of the screen. Files can be up to 50 MB.
+          Anyone with books as PDF, EPUB or Word files who wants to read them
+          on a phone without zooming, or at a desk without a fixed page floating
+          in the middle of the screen. Files can be up to 50 MB.
         </p>
         <p>
           It works best on books with selectable text. A scanned PDF holds only
@@ -168,8 +170,8 @@ export default function AboutPage() {
         <h2>Try it</h2>
         <p>
           Open Paperless and tap Try it with Meditations to add a free book, or
-          choose a PDF or EPUB of your own. It runs in the browser on phones and
-          computers, and you can install it like an app.
+          choose a PDF, EPUB or Word document of your own. It runs in the
+          browser on phones and computers, and you can install it like an app.
         </p>
       </Prose>
 

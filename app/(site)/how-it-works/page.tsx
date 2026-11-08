@@ -89,6 +89,16 @@ export default function HowItWorksPage() {
           Paperless says it’s a scan instead of opening an empty book.
         </p>
 
+        <h2>Word documents</h2>
+        <p>
+          A .docx file is a zip of XML with the text in one part and the styles
+          in another. Paperless unzips it in your browser and walks it, turning
+          Word’s styles into headings, its italic and bold text into italics and
+          bold, and its numbered paragraphs into lists. Pictures, headers,
+          footers and comments are left out. Legacy .doc files aren’t Word
+          documents in this sense and can’t be read — save them as .docx.
+        </p>
+
         <h2>EPUBs, Gutenberg and links</h2>
         <p>
           An EPUB is a zip of HTML chapters with a file that lists them in reading order. Paperless unzips it in your
@@ -102,8 +112,8 @@ export default function HowItWorksPage() {
           and license, page numbers and pictures are left out.
         </p>
         <p>
-          A PDF or EPUB from a link is downloaded by the Paperless server, because most sites don’t let a browser fetch
-          files from another site. The file goes straight to your browser and isn’t kept.
+          A PDF, EPUB or Word document from a link is downloaded by the Paperless server, because most sites don’t
+          let a browser fetch files from another site. The file goes straight to your browser and isn’t kept.
         </p>
 
         <h2 id="ai">What the AI may do</h2>
