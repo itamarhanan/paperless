@@ -65,7 +65,7 @@ const STEPS: Step[] = [
     id: "library",
     target: "library",
     title: "Your own books",
-    body: () => "Add a PDF, an EPUB or a link in the Library. To see this tour again, choose Show the tour in the More menu.",
+    body: () => "Add a PDF, EPUB or Word document, or a link, in the Library. To see this tour again, choose Show the tour in the More menu.",
   },
 ];
 
