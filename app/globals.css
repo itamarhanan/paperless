@@ -44,6 +44,8 @@
   /* Key passages: a pencil underline with a faint wash, like a reader's own marking */
   --key-passage: rgb(20 20 20 / 0.55);
   --key-passage-bg: rgb(20 20 20 / 0.045);
+  /* The sentence being read aloud: a flat wash, quieter than selection */
+  --spoken-wash: rgb(20 20 20 / 0.18);
   --radius: 0.75rem;
 
   --chart-1: #141414;
@@ -100,6 +102,7 @@
   --search-hit-current-fg: #121212;
   --key-passage: rgb(232 232 232 / 0.55);
   --key-passage-bg: rgb(232 232 232 / 0.07);
+  --spoken-wash: rgb(232 232 232 / 0.22);
   --sidebar: #161616;
   --sidebar-foreground: #e8e8e8;
   --sidebar-primary: #e8e8e8;
@@ -144,6 +147,7 @@
   --search-hit-current-fg: #f6eedf;
   --key-passage: rgb(46 36 23 / 0.55);
   --key-passage-bg: rgb(46 36 23 / 0.05);
+  --spoken-wash: rgb(46 36 23 / 0.18);
   --sidebar: #f1e8d6;
   --sidebar-foreground: #2e2417;
   --sidebar-accent: #e8dcc6;
