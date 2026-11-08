@@ -5,10 +5,16 @@ import { NextRequest, NextResponse } from "next/server";
 import { isIP } from "node:net";
 import { lookup } from "node:dns/promises";
 import { USER_AGENT } from "@/lib/site";
+import { detectFormat } from "@/lib/formats/detect";
+import { SUPPORTED } from "@/lib/formats/supported";
 
 const MAX_BYTES = 50 * 1024 * 1024;
 const FETCH_TIMEOUT_MS = 20000;
 const MAX_REDIRECTS = 5;
+const ACCEPT = [...SUPPORTED.flatMap((f) => f.mediaTypes), "*/*;q=0.1"].join(", ");
+
+const mimeTypeOf = (format: string) =>
+  SUPPORTED.find((f) => f.id === format)?.mediaTypes[0] ?? "application/octet-stream";
 
 function fail(message: string, status: number) {
   return NextResponse.json({ error: message }, { status });
@@ -36,7 +42,7 @@ function isPrivateAddress(address: string): boolean {
 
 /** Only public http(s) URLs: this endpoint must not reach the server's own network. */
 async function validateUrl(raw: unknown): Promise<URL | string> {
-  if (typeof raw !== "string" || !raw.trim()) return "Enter a link to a PDF or EPUB.";
+  if (typeof raw !== "string" || !raw.trim()) return "Enter a link to a readable file.";
   let url: URL;
   try {
     url = new URL(raw.trim());
@@ -92,7 +98,7 @@ async function fetchFollowing(start: URL): Promise<Response | string | null> {
     const response = await fetch(url, {
       redirect: "manual",
       signal,
-      headers: { Accept: "application/pdf, application/epub+zip;q=0.9, */*;q=0.1", "User-Agent": USER_AGENT },
+      headers: { Accept: ACCEPT, "User-Agent": USER_AGENT },
     }).catch(() => null);
     if (!response) return null;
     const location = response.headers.get("location");
@@ -121,14 +127,12 @@ export async function POST(request: NextRequest) {
       const buffer = await readCapped(response);
       if (!buffer) return fail("This file is larger than 50 MB.", 413);
 
-      // Judge by the bytes: servers often send PDFs and EPUBs as octet-stream
-      const head = new Uint8Array(buffer.slice(0, 5));
-      const isPdf = new TextDecoder().decode(head) === "%PDF-";
-      const isZip = head[0] === 0x50 && head[1] === 0x4b; // "PK": an EPUB is a zip
-      if (!isPdf && !isZip) return fail("That link isn't a PDF or EPUB file.", 415);
+      // Judge by the bytes: servers send readable files as all kinds of types
+      const format = detectFormat(buffer);
+      if (!format) return fail(`That link isn't a ${SUPPORTED.map((f) => f.name).join(", ")} file.`, 415);
 
       return new NextResponse(buffer, {
-        headers: { "Content-Type": isPdf ? "application/pdf" : "application/epub+zip" },
+        headers: { "Content-Type": mimeTypeOf(format) },
       });
     }
 
