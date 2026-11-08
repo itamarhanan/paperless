@@ -3,7 +3,7 @@
 
   # Paperless
 
-  **A reader that turns PDFs and EPUBs into pages that actually fit your screen.**
+  **A reader that turns PDFs, EPUBs and Word documents into pages that actually fit your screen.**
 
   [**Try it →**](https://onpaperless.vercel.app)
 
@@ -33,7 +33,7 @@ I read a lot of books as PDFs, and every PDF reader I tried showed me either a t
 - **Real chapters.** They come from the PDF's own outline, matched to the headings on the page.
 - **The print details, kept.** Drop caps join their word again, epigraphs keep their credit line, and italics come from the font names in the file.
 - **The print noise, gone.** The reader drops running heads and page numbers, and hides praise and copyright pages until you ask for them from the contents.
-- **EPUB and Gutenberg.** The browser unzips an EPUB and reads it. Free Gutenberg books come in through their HTML editions, which already mark chapters, quotes and verse.
+- **EPUB, Word and Gutenberg.** The browser unzips an EPUB or a .docx and reads it. Free Gutenberg books come in through their HTML editions, which already mark chapters, quotes and verse.
 - **Discover.** Search Open Library and Project Gutenberg, or describe what you feel like reading. Paperless checks every suggestion against Open Library first, so a book the model made up never shows.
 - **AI that only labels.** It marks headings, quotes and stray page numbers. It never writes the book.
 - **Local-first.** The library lives in IndexedDB and the app works offline once installed.
@@ -61,7 +61,7 @@ pnpm lint && pnpm typecheck
 pnpm test    # Playwright, on an iPhone viewport and a desktop one
 ```
 
-The suite runs against the production build, like CI. The tests make their own books: a PDF printed by the browser, an EPUB zipped in memory, a Gutenberg-style page. No copyrighted text is in the repo. The tests mock the AI with an answer containing a made-up passage, which the reader must reject.
+The suite runs against the production build, like CI. The tests make their own books: a PDF printed by the browser, an EPUB and a Word document zipped in memory, a Gutenberg-style page. No copyrighted text is in the repo. The tests mock the AI with an answer containing a made-up passage, which the reader must reject.
 
 ## Layout
 
@@ -69,6 +69,7 @@ The suite runs against the production build, like CI. The tests make their own b
 | --- | --- |
 | `lib/pdf-processor.ts` | PDF lines to paragraphs, headings, quotes, emphasis, front and back matter, and pages |
 | `lib/html-processor.ts` | The same for HTML books |
+| `lib/formats/` | The format registry: `supported.ts` (what the UI lists), `detect.ts` (sniffing bytes), `registry.ts` (adapters), `docx-processor.ts` (Word to HTML) |
 | `lib/epub-processor.ts` | EPUB to one HTML book, with chapter titles from its own contents |
 | `lib/import.ts` | Every way a book gets into the library |
 | `hooks/use-page-cleanup.ts` | The background AI page check, and the checks on its answers |
@@ -80,7 +81,7 @@ The suite runs against the production build, like CI. The tests make their own b
 | `components/reader` | The reader: page, toolbars, contents, search, appearance, chat |
 | `app/api` | Downloading linked files, Gutenberg books and Open Library data, and the AI routes |
 | `app/(site)`, `proxy.ts` | The public pages; `/` shows the library after you add a book |
-| `tests/` | Playwright specs, plus fixtures that build their own PDF, EPUB and Gutenberg books |
+| `tests/` | Playwright specs, plus fixtures that build their own PDF, EPUB, Word and Gutenberg books |
 | `docs/brand` | Sources of the app icon: a page with its corner lifting, like the reader's page turn |
 
 Built with Next.js, React, Tailwind CSS, Radix, pdf.js, Dexie and the AI SDK with Gemini and Groq.
