@@ -3,8 +3,8 @@ import { zipSync, strToU8 } from "fflate";
 
 /**
  * Test books, made on the fly so the repo carries no copyrighted text:
- * a PDF printed by the browser itself, an EPUB zipped in memory, and a
- * Gutenberg-style HTML page.
+ * a PDF printed by the browser itself, an EPUB and a Word document zipped in
+ * memory, and a Gutenberg-style HTML page.
  */
 
 const paragraph = (n: string) =>
@@ -56,6 +56,41 @@ export function makeEpub(): Buffer {
     "OEBPS/text/one.xhtml": strToU8(xhtml(`<h1>Seeds</h1>${prose(1)}`)),
     "OEBPS/text/two.xhtml": strToU8(xhtml(`<p class="chapter-title">Roots</p>${prose(2)}`)),
     "OEBPS/text/three.xhtml": strToU8(xhtml(`<h1>Leaves</h1>${prose(3)}`)),
+  };
+  return Buffer.from(zipSync(files));
+}
+
+/** A short Word article: headings from styles, italics, bold, a list and a table. */
+export function makeDocx(): Buffer {
+  const w = (body: string) =>
+    `<?xml version="1.0" encoding="utf-8"?><w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}</w:body></w:document>`;
+  const heading = (level: number, text: string) =>
+    `<w:p><w:pPr><w:pStyle w:val="Heading${level}"/></w:pPr><w:r><w:t>${text}</w:t></w:r></w:p>`;
+  const prose = (text: string) => `<w:p><w:r><w:t>${text}</w:t></w:r></w:p>`;
+  const listItem = (text: string) =>
+    `<w:p><w:pPr><w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr></w:pPr><w:r><w:t>${text}</w:t></w:r></w:p>`;
+  const files = {
+    "[Content_Types].xml": strToU8(
+      `<?xml version="1.0"?><Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/></Types>`
+    ),
+    "docProps/core.xml": strToU8(
+      `<?xml version="1.0"?><cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/"><dc:title>Research Notes</dc:title><dc:language>en</dc:language></cp:coreProperties>`
+    ),
+    "word/styles.xml": strToU8(
+      `<?xml version="1.0"?><w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/></w:style><w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/></w:style></w:styles>`
+    ),
+    "word/document.xml": strToU8(
+      w(
+        heading(1, "Research Notes") +
+          prose("The quick brown fox jumps over the lazy dog, and this paragraph carries enough words to read as prose on a page of its own.") +
+          `<w:p><w:r><w:t>Sentence with </w:t></w:r><w:r><w:rPr><w:i/></w:rPr><w:t>italic words</w:t></w:r><w:r><w:t> and </w:t></w:r><w:r><w:rPr><w:b/></w:rPr><w:t>bold words</w:t></w:r><w:r><w:t>.</w:t></w:r></w:p>` +
+          heading(2, "Background") +
+          prose("Background prose follows here, plain and unhurried, filling out the document so the article reads like a real set of notes rather than a handful of fragments and stubs.") +
+          listItem("First finding") +
+          listItem("Second finding") +
+          `<w:tbl><w:tr><w:tc><w:p><w:r><w:t>Table head</w:t></w:r></w:p></w:tc><w:tc><w:p><w:r><w:t>Table cell</w:t></w:r></w:p></w:tc></w:tr></w:tbl>`
+      )
+    ),
   };
   return Buffer.from(zipSync(files));
 }

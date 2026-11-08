@@ -1,4 +1,4 @@
-import { test, expect, makeEpub, makePdf } from "./fixtures";
+import { test, expect, makeDocx, makeEpub, makePdf } from "./fixtures";
 import { addFile, openContents } from "./helpers";
 
 test("a PDF reads as clean text, with its chapters in the contents", async ({ page, browser, ai }) => {
@@ -44,6 +44,27 @@ test("an EPUB keeps its chapters, italics and title", async ({ page, ai }) => {
 
   await page.goto("/library");
   await expect(page.getByRole("link", { name: "The Test Garden", exact: true })).toBeVisible();
+});
+
+test("a Word document keeps its headings, italics, bold, lists and title", async ({ page, ai }) => {
+  void ai;
+  await page.goto("/library");
+  await addFile(page, "notes.docx", "application/vnd.openxmlformats-officedocument.wordprocessingml.document", makeDocx());
+
+  const text = await page.locator(".reader-prose").innerText();
+  expect(text).toContain("The quick brown fox");
+  expect(text).toContain("First finding");
+  expect(text).toContain("Second finding");
+  expect(text).toContain("Table head");
+  await expect(page.locator(".reader-prose em").first()).toHaveText("italic words");
+  await expect(page.locator(".reader-prose strong").first()).toHaveText("bold words");
+  await expect(page.locator(".reader-prose h1, .reader-prose h2").first()).toContainText("Research Notes");
+
+  const contents = await openContents(page);
+  await expect(contents.getByText("Background", { exact: true })).toBeVisible();
+
+  await page.goto("/library");
+  await expect(page.getByRole("link", { name: "Research Notes", exact: true })).toBeVisible();
 });
 
 test("a scanned PDF explains why it can't be read", async ({ page, browser }) => {
