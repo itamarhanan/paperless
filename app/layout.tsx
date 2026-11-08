@@ -5,6 +5,7 @@ import { Analytics } from "@vercel/analytics/next";
 import { Toaster } from "@/components/ui/sonner";
 import { ThemeProvider } from "@/components/providers/theme-provider";
 import { ServiceWorker } from "@/components/providers/service-worker";
+import { ListenMiniPlayer } from "@/components/listen-mini-player";
 import { SITE_URL } from "@/lib/site";
 import "./globals.css";
 
@@ -40,7 +41,7 @@ export const viewport: Viewport = {
 };
 
 const DESCRIPTION =
-  "Read PDFs and EPUBs as pages sized for your screen. Paperless keeps the book's text and structure, and stores your library in your browser.";
+  "Read PDFs, EPUBs and Word documents as pages sized for your screen. Paperless keeps the book's text and structure, and stores your library in your browser.";
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
@@ -51,13 +52,13 @@ export const metadata: Metadata = {
   openGraph: {
     type: "website",
     siteName: "Paperless",
-    title: "Paperless: read PDFs and EPUBs as real books",
+    title: "Paperless: read PDFs, EPUBs and Word documents as real books",
     description: DESCRIPTION,
     url: "/",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Paperless: read PDFs and EPUBs as real books",
+    title: "Paperless: read PDFs, EPUBs and Word documents as real books",
     description: DESCRIPTION,
   },
   appleWebApp: {
@@ -81,6 +82,7 @@ export default function RootLayout({ children }: Readonly<{ children: React.Reac
             position="bottom-center"
             mobileOffset={{ bottom: "calc(env(safe-area-inset-bottom) + 4.5rem)" }}
           />
+          <ListenMiniPlayer />
         </ThemeProvider>
         <Analytics />
         <ServiceWorker />

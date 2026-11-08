@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Paperless",
     short_name: "Paperless",
-    description: "Read PDFs and EPUBs as clean, comfortable text.",
+    description: "Read PDFs, EPUBs and Word documents as clean, comfortable text.",
     start_url: "/library",
     display: "standalone",
     background_color: "#fcfcfc",

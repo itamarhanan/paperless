@@ -7,7 +7,7 @@ export const contentType = "image/png";
 
 const TITLE = "Paperless";
 const SUBTITLE = "A reader for the books you already have.";
-const LEDE = "Open a PDF or EPUB and read it as pages that fit your screen.";
+const LEDE = "Open a PDF, EPUB or Word document and read it as pages that fit your screen.";
 const IMPRINT = "FREE · NO ACCOUNT · YOUR BOOKS STAY ON YOUR DEVICE";
 
 /**
