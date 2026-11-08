@@ -16,6 +16,8 @@ import {
   ListTree,
   MessageCircle,
   PanelLeft,
+  Pause,
+  Play,
   Search,
   Sparkles,
   Trash2,
@@ -33,6 +35,8 @@ import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover
 import { Drawer, DrawerContent, DrawerDescription, DrawerTitle } from "@/components/ui/drawer";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useReaderStore, type ReaderPanel } from "@/lib/store/reader-store";
+import { useListenStore } from "@/lib/store/listen-store";
+import { ListenSettings } from "./listen-settings";
 import { useBookmarks } from "@/hooks/use-bookmarks";
 import { removeWithUndo } from "@/lib/remove-with-undo";
 import { pageHasAiChanges, pagePassages } from "@/lib/pdf-processor";
@@ -68,6 +72,9 @@ export function TopBar({
   const setChatOpen = useReaderStore((s) => s.setChatOpen);
   const panel = useReaderStore((s) => s.panel);
   const setPanel = useReaderStore((s) => s.setPanel);
+  const listening = useListenStore((s) => s.status !== "idle");
+  const playing = useListenStore((s) => s.status === "playing");
+  const toggleListen = useListenStore((s) => s.toggle);
   const { items, toggle } = useBookmarks();
   const bookmarked = items.some((b) => b.page === currentPage);
   const progress = document.totalPages ? currentPage / document.totalPages : 0;
@@ -144,6 +151,17 @@ export function TopBar({
               onClick={() => setChatOpen(!chatOpen)}
             >
               <MessageCircle />
+            </Button>
+
+            <Button
+              variant={listening ? "secondary" : "ghost"}
+              size="icon"
+              aria-label={listening ? "Pause" : "Listen"}
+              aria-pressed={listening}
+              data-tour="listen"
+              onClick={() => toggleListen()}
+            >
+              {playing ? <Pause /> : <Play />}
             </Button>
           </>
         )}
@@ -257,11 +275,15 @@ export function BottomBar({ hidden }: { hidden: boolean }) {
   const panel = useReaderStore((s) => s.panel);
   const setPanel = useReaderStore((s) => s.setPanel);
   const setChatOpen = useReaderStore((s) => s.setChatOpen);
+  const listening = useListenStore((s) => s.status !== "idle");
+  const playing = useListenStore((s) => s.status === "playing");
+  const toggleListen = useListenStore((s) => s.toggle);
 
   const items = [
     { key: "contents", label: "Contents", icon: ListTree, onClick: () => setPanel("contents") },
     { key: "search", label: "Search", icon: Search, onClick: () => setPanel("search") },
     { key: "appearance", label: "Appearance", icon: ALargeSmall, onClick: () => setPanel("appearance") },
+    { key: "listen", label: listening ? "Pause" : "Listen", icon: playing ? Pause : Play, onClick: toggleListen },
     { key: "chat", label: "Ask about this page", icon: MessageCircle, onClick: () => setChatOpen(true) },
   ] as const;
 
@@ -274,7 +296,7 @@ export function BottomBar({ hidden }: { hidden: boolean }) {
         hidden && "translate-y-full"
       )}
     >
-      <div className="px-safe mx-auto grid h-14 max-w-md grid-cols-4 items-center">
+      <div className="px-safe mx-auto grid h-14 max-w-md grid-cols-5 items-center">
         {items.map(({ key, label, icon: Icon, onClick }) => (
           <button
             key={key}
@@ -362,6 +384,15 @@ export function PhoneSheets() {
           <SheetHeader title="Appearance" onDone={close} />
           <div className="pb-safe min-h-0 overflow-y-auto px-4 pb-4">
             <AppearanceControls />
+          </div>
+        </DrawerContent>
+      </Drawer>
+
+      <Drawer {...sheet("listen")} modal={false}>
+        <DrawerContent overlay={false} className="max-h-[70dvh] shadow-[0_-8px_30px_rgb(0_0_0/0.12)]">
+          <SheetHeader title="Listening" description="Speed and voice for reading aloud" onDone={close} />
+          <div className="pb-safe min-h-0 overflow-y-auto px-4 pb-4">
+            <ListenSettings />
           </div>
         </DrawerContent>
       </Drawer>

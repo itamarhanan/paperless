@@ -21,9 +21,11 @@ import { useKeyboardShortcuts } from "@/hooks/use-keyboard-shortcuts";
 import { useHidingChrome } from "@/hooks/use-hiding-chrome";
 import { usePageCleanup } from "@/hooks/use-page-cleanup";
 import { useLoadBookmarks } from "@/hooks/use-bookmarks";
+import { useListenStore } from "@/lib/store/listen-store";
 import dynamic from "next/dynamic";
 import { ReaderPage } from "./reader-page";
 import { BottomBar, ChatAside, PhoneSheets, Sidebar, TopBar } from "./reader-chrome";
+import { ListenPlayer } from "./listen-player";
 import { useTour } from "./reader-tour-store";
 
 const ReaderTour = dynamic(() => import("./reader-tour").then((module) => module.ReaderTour));
@@ -37,6 +39,12 @@ export function ReaderInterface() {
   const params = useSearchParams();
   const id = params.get("id");
   const [state, setState] = useState<LoadState>("loading");
+
+  // The reader on screen is the authority over the book being read
+  useEffect(() => {
+    useReaderStore.getState().setMounted(true);
+    return () => useReaderStore.getState().setMounted(false);
+  }, []);
 
   const docId = useReaderStore((s) => s.docId);
   const document = useReaderStore((s) => s.document);
@@ -197,6 +205,8 @@ export function ReaderInterface() {
     onNextPage: () => goTo(1),
     onPrevPage: () => goTo(-1),
     onSearch: () => useReaderStore.getState().setPanel("search"),
+    onToggleListen: () => useListenStore.getState().toggle(),
+    onListenSkip: (delta) => useListenStore.getState().skip(delta),
   });
 
   // Tapping the text toggles the toolbars on phones, like Books
@@ -250,6 +260,8 @@ export function ReaderInterface() {
           <PhoneSheets />
         </>
       )}
+
+      <ListenPlayer hidden={chrome.hidden} />
 
       {touring && <ReaderTour desktop={desktop} />}
     </div>

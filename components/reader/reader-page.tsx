@@ -8,10 +8,13 @@ import { Button } from "@/components/ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Slider } from "@/components/ui/slider";
 import { useReaderStore } from "@/lib/store/reader-store";
+import { useListenStore } from "@/lib/store/listen-store";
+import { collectScript, type ListenScript } from "@/lib/speech/script";
 import { useCleanupStore } from "@/hooks/use-page-cleanup";
 import { pageHasAiChanges, pagePassages, withDefaults, type ProcessedDocument } from "@/lib/pdf-processor";
 import { displayTitle, escapeRegExp } from "@/lib/text";
 import { useTour } from "./reader-tour-store";
+import { cn } from "@/lib/utils";
 
 const FONT_STACKS = {
   serif: "var(--font-reading), Georgia, serif",
@@ -39,7 +42,8 @@ function nextHeading(doc: ProcessedDocument, page: number): string | null {
 const HIGHLIGHT_CSS = `
 ::highlight(search-hit) { background-color: var(--search-hit); color: inherit; }
 ::highlight(search-hit-current) { background-color: var(--search-hit-current); color: var(--search-hit-current-fg); }
-::highlight(key-passage) { background-color: var(--key-passage-bg); text-decoration: underline; text-decoration-color: var(--key-passage); text-decoration-thickness: 0.08em; text-underline-offset: 0.24em; }`;
+::highlight(key-passage) { background-color: var(--key-passage-bg); text-decoration: underline; text-decoration-color: var(--key-passage); text-decoration-thickness: 0.08em; text-underline-offset: 0.24em; }
+::highlight(spoken) { background-color: var(--spoken-wash); color: inherit; }`;
 
 function ensureHighlightStyles() {
   if (document.getElementById("search-highlight-css")) return;
@@ -134,6 +138,47 @@ function useKeyPassages(container: React.RefObject<HTMLElement | null>, passages
   }, [container, key, contentKey]);
 }
 
+/**
+ * Washes the sentence the voice is reading, over the text, without touching
+ * the words. Scrolls only when the sentence leaves the comfortable band, so
+ * the page follows the voice without fighting the reader's own scrolling.
+ */
+function useSpokenHighlight(
+  container: React.RefObject<HTMLElement | null>,
+  script: ListenScript | null,
+  paragraph: number,
+  sentence: number,
+  active: boolean,
+  contentKey: string
+) {
+  const block = script?.blocks[paragraph];
+  const key = `${script?.key ?? ""}:${paragraph}:${sentence}:${contentKey}`;
+  useEffect(() => {
+    const highlights = typeof CSS === "undefined" ? undefined : CSS.highlights;
+    if (!highlights) return;
+    ensureHighlightStyles();
+    highlights.delete("spoken");
+    if (!active || !script || !block || !block.locate) return; // scripts built from data have no DOM to wash
+    const segment = block.segments[sentence];
+    if (!segment) return;
+    const range = block.locate(segment.start, segment.end);
+    if (!range) return;
+    highlights.set("spoken", new Highlight(range));
+
+    // Keep the sentence in view, with room for the top bar and the player
+    const rect = range.getBoundingClientRect();
+    const topBar = 140;
+    if (rect.top < topBar) {
+      window.scrollTo({ top: Math.max(0, window.scrollY + rect.top - window.innerHeight / 3) });
+    } else if (rect.bottom > window.innerHeight - 180) {
+      window.scrollTo({ top: Math.max(0, window.scrollY + rect.bottom - window.innerHeight * 0.66) });
+    }
+    return () => {
+      highlights.delete("spoken");
+    };
+  }, [active, block, script, key, sentence]);
+}
+
 export function ReaderPage({ onCleanNow }: { onCleanNow: (page: number) => void }) {
   const document = useReaderStore((s) => s.document)!;
   const currentPage = useReaderStore((s) => s.currentPage);
@@ -182,6 +227,26 @@ export function ReaderPage({ onCleanNow }: { onCleanNow: (page: number) => void 
     settings.keyPassages && !showOriginal ? passages : [],
     `${currentPage}:${useCleaned}`
   );
+
+  // Reading aloud: the voice reads the page as laid out, sentence by sentence
+  const listening = useListenStore((s) => s.status !== "idle");
+  const listenScript = useListenStore((s) => s.script);
+  const listenParagraph = useListenStore((s) => s.paragraph);
+  const listenSentence = useListenStore((s) => s.sentence);
+  const docId = useReaderStore((s) => s.docId);
+  // Only the page on screen speaks; scripts from other pages are stale
+  const spoken =
+    listening && listenScript && listenScript.docId === docId && listenScript.page === currentPage
+      ? listenScript
+      : null;
+  useSpokenHighlight(articleRef, spoken, listenParagraph, listenSentence, listening, `${currentPage}:${useCleaned}`);
+
+  useEffect(() => {
+    if (!listening || !docId) return;
+    const root = articleRef.current;
+    if (!root) return;
+    useListenStore.getState().setScript(collectScript(docId, currentPage, String(useCleaned), root));
+  }, [listening, docId, currentPage, useCleaned, markdown]);
 
   const section = useMemo(() => sectionFor(document, currentPage), [document, currentPage]);
   const sectionLabel = section && !/^#{1,6}\s/.test(markdown.trimStart()) ? section : null;
@@ -256,7 +321,14 @@ export function ReaderPage({ onCleanNow }: { onCleanNow: (page: number) => void 
       </div>
 
       {pendingSwap && !showOriginal && !touring && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-[calc(env(safe-area-inset-bottom)+5rem)] z-30 flex justify-center lg:bottom-8">
+        <div
+          className={cn(
+            "pointer-events-none fixed inset-x-0 z-30 flex justify-center",
+            listening
+              ? "bottom-[calc(env(safe-area-inset-bottom)+8.5rem)] lg:bottom-[5.5rem]"
+              : "bottom-[calc(env(safe-area-inset-bottom)+5rem)] lg:bottom-8"
+          )}
+        >
           <button
             type="button"
             className="pointer-events-auto flex h-11 items-center gap-2 rounded-full bg-primary px-5 text-[0.9375rem] font-medium text-primary-foreground shadow-lg animate-in fade-in-0 slide-in-from-bottom-2"
