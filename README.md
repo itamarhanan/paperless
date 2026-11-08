@@ -36,6 +36,7 @@ I read a lot of books as PDFs, and every PDF reader I tried showed me either a t
 - **EPUB, Word and Gutenberg.** The browser unzips an EPUB or a .docx and reads it. Free Gutenberg books come in through their HTML editions, which already mark chapters, quotes and verse.
 - **Discover.** Search Open Library and Project Gutenberg, or describe what you feel like reading. Paperless checks every suggestion against Open Library first, so a book the model made up never shows.
 - **AI that only labels.** It marks headings, quotes and stray page numbers. It never writes the book.
+- **Read aloud.** The phone's own voices read the page and turn the pages by themselves, with sentence skips and a choice of voices; reading continues while you browse the library, and the sentence being read is lightly highlighted.
 - **Local-first.** The library lives in IndexedDB and the app works offline once installed.
 
 ## How the AI stays honest
@@ -68,6 +69,7 @@ The suite runs against the production build, like CI. The tests make their own b
 | Path | What's there |
 | --- | --- |
 | `lib/pdf-processor.ts` | PDF lines to paragraphs, headings, quotes, emphasis, front and back matter, and pages |
+| `lib/speech/` | The read-aloud machinery: page scripts, sentence splitting, and speech synthesis |
 | `lib/html-processor.ts` | The same for HTML books |
 | `lib/formats/` | The format registry: `supported.ts` (what the UI lists), `detect.ts` (sniffing bytes), `registry.ts` (adapters), `docx-processor.ts` (Word to HTML) |
 | `lib/epub-processor.ts` | EPUB to one HTML book, with chapter titles from its own contents |
