@@ -106,6 +106,21 @@ ${Array.from({ length: 5 }, (_, i) => `<p>${i + 1}. Of my grandfather Verus I ha
 <section id="pg-footer"><p>End of the Project Gutenberg eBook. Licence text.</p></section>
 </body></html>`;
 
+/**
+ * A book long enough to listen through without running out: the same opening
+ * as the sample, then 120 short books, each paginated as its own chapter.
+ */
+export const LONG_GUTENBERG_HTML = `<!DOCTYPE html><html lang="en"><body>
+<section id="pg-header"><p>The Project Gutenberg eBook of Meditations. This eBook is for the use of anyone anywhere.</p></section>
+<h1>MEDITATIONS</h1><h2>By Marcus Aurelius</h2>
+<h2>THE FIRST BOOK</h2>
+${Array.from({ length: 5 }, (_, i) => `<p>${i + 1}. Of my grandfather Verus I have learned to be gentle and meek, and to refrain from all anger and passion. <i>Diligence</i> in all things.</p>`).join("")}
+<h2>THE SECOND BOOK</h2>
+<p>Begin the morning by saying to thyself, I shall meet with the busy-body, the ungrateful, arrogant, deceitful, envious, unsocial.</p>
+${Array.from({ length: 120 }, (_, i) => `<h2>THE BOOK OF ${i + 3}</h2><p>${i + 1}. Begin the morning by saying to thyself, I shall meet with the busy-body, the ungrateful, arrogant, deceitful, envious, unsocial.</p>`).join("")}
+<section id="pg-footer"><p>End of the Project Gutenberg eBook. Licence text.</p></section>
+</body></html>`;
+
 type AiCalls = { enhance: number };
 
 /**
@@ -113,10 +128,13 @@ type AiCalls = { enhance: number };
  * and an AI that answers with labels only: it marks the last plain paragraph
  * of a page as a quote and picks one key passage (plus one it must reject).
  */
-export const test = base.extend<{ ai: AiCalls; tourSeen: boolean; seedTour: void }>({
+export const test = base.extend<{ ai: AiCalls; tourSeen: boolean; seedTour: void; gutenbergBook: string }>({
   // The sample opens with the guided tour. Other tests start as returning readers;
   // the tour's own tests opt out with test.use({ tourSeen: false }).
   tourSeen: [true, { option: true }],
+  // Which HTML the sample route serves. Most tests want the two-page sample;
+  // the listening tests want a book long enough to jump through.
+  gutenbergBook: [GUTENBERG_HTML, { option: true }],
   seedTour: [
     async ({ page, tourSeen }, use) => {
       if (tourSeen) await page.addInitScript(() => localStorage.setItem("paperless:tour-seen", "1"));
@@ -124,7 +142,7 @@ export const test = base.extend<{ ai: AiCalls; tourSeen: boolean; seedTour: void
     },
     { auto: true },
   ],
-  ai: async ({ page }, use) => {
+  ai: async ({ page, gutenbergBook }, use) => {
     const calls: AiCalls = { enhance: 0 };
     await page.route("**/api/enhance", async (route) => {
       calls.enhance++;
@@ -145,7 +163,7 @@ export const test = base.extend<{ ai: AiCalls; tourSeen: boolean; seedTour: void
       });
     });
     await page.route("**/api/discover/gutenberg?id=2680", (route) =>
-      route.fulfill({ body: GUTENBERG_HTML, contentType: "text/html" })
+      route.fulfill({ body: gutenbergBook, contentType: "text/html" })
     );
     await use(calls);
   },

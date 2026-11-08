@@ -1,23 +1,35 @@
-import { test, expect, pageIndicator } from "./fixtures";
+import { test, expect, pageIndicator, LONG_GUTENBERG_HTML } from "./fixtures";
 import type { Page } from "@playwright/test";
 import { openReaderWithFakeSpeech } from "./speech";
+
+// Reading aloud needs a long book to jump through and background progress to
+// observe, so this file serves the long sample instead of the two-page one.
+test.use({ gutenbergBook: LONG_GUTENBERG_HTML });
 
 /** The player for this device: the phone bar or the floating desktop pill. */
 const player = (page: Page, mobile?: boolean) =>
   page.locator(`[data-listen-player="${mobile ? "phone" : "desktop"}"]`);
+
+// Asking for the `ai` fixture installs the Gutenberg route mock; without it
+// the fake-voice helper would hit the real network and flake under load.
+test.beforeEach(async ({ ai }) => {
+  void ai;
+});
 
 test("reads the page aloud and turns pages by itself", async ({ page, isMobile }) => {
   await openReaderWithFakeSpeech(page);
   await page.getByRole("button", { name: "Listen", exact: true }).click();
   await expect(player(page, isMobile)).toBeVisible();
 
-  // The voice moves through the paragraphs; the reader follows
-  await expect(pageIndicator(page)).toHaveText(/Page 2 of/, { timeout: 30_000 });
+  // The voice moves through the paragraphs; the reader follows it. Somewhere
+  // past the first page — how far depends on the voice's pace, so the exact
+  // page is not what matters, only that the reader left page 1 behind.
+  await expect(pageIndicator(page)).not.toHaveText(/Page 1 of/, { timeout: 30_000 });
 
-  // Stopping takes the player away again
+  // Stopping takes the player away again; the voice has turned at least a page
   await player(page, isMobile).getByRole("button", { name: "Stop listening" }).click();
   await expect(player(page, isMobile)).toBeHidden();
-  await expect(pageIndicator(page)).toHaveText(/Page 2 of/);
+  await expect(pageIndicator(page)).not.toHaveText(/Page 1 of/);
 });
 
 test("finishes the book with a quiet end, not a dialog", async ({ page, isMobile }) => {
@@ -54,9 +66,9 @@ test("keeps reading while you look around the library", async ({ page, isMobile 
   const at = chip.getByText(/Page \d+ of \d+/);
   await expect(at).toBeVisible();
   const before = await at.textContent();
-  await page.waitForTimeout(3500);
-  const after = await at.textContent();
-  expect(after).not.toBe(before);
+  // Poll instead of sleeping and reading once: the chip's page label is set by
+  // the voice's own pace, so a direct snapshot races its next page turn.
+  await expect.poll(async () => at.textContent(), { timeout: 15_000 }).not.toBe(before);
 
   // Coming back into the book picks up where the voice is
   await chip.getByRole("link", { name: "Back to the book" }).click();
