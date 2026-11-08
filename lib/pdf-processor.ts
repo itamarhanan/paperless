@@ -101,6 +101,10 @@ export interface ReaderSettings {
   showExtras: boolean;
   /** Underline the passages the AI picked as most important. */
   keyPassages: boolean;
+  /** Reading-aloud speed, relative to the voice's own pace. */
+  speakRate: number;
+  /** Chosen voice as its voiceURI; it belongs to this device, so a missing choice falls back. */
+  speakVoiceURI: string;
 }
 
 export const DEFAULT_SETTINGS: ReaderSettings = {
@@ -116,6 +120,8 @@ export const DEFAULT_SETTINGS: ReaderSettings = {
   autoCleanup: true,
   showExtras: false,
   keyPassages: true,
+  speakRate: 1,
+  speakVoiceURI: "",
 };
 
 export const PAGE_LENGTHS = { short: 2500, medium: 3500, long: 5000 } as const;
