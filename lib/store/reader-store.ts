@@ -4,7 +4,7 @@ import { renderAiPages } from "@/lib/pdf-processor";
 
 export const SIDEBAR_KEY = "paperless:sidebar";
 
-export type ReaderPanel = "contents" | "search" | "appearance" | null;
+export type ReaderPanel = "contents" | "search" | "appearance" | "listen" | null;
 
 interface ReaderState {
   docId: string | null;
@@ -20,6 +20,8 @@ interface ReaderState {
   /** Pages the reader chose to see as extracted, without AI cleanup. */
   showOriginal: Record<number, boolean>;
   searchQuery: string;
+  /** The reader interface is on screen; its scripts and saves are the authority. */
+  mounted: boolean;
 
   load: (docId: string, doc: ProcessedDocument, page: number) => void;
   setDocument: (doc: ProcessedDocument) => void;
@@ -31,6 +33,7 @@ interface ReaderState {
   setChatOpen: (open: boolean) => void;
   setShowOriginal: (page: number, show: boolean) => void;
   setSearchQuery: (query: string) => void;
+  setMounted: (mounted: boolean) => void;
   /** Records what the AI found for these paragraphs and re-lays out their pages. */
   applyAi: (indices: number[], labels: Record<number, AiLabel>, passages: Record<number, string[]>) => void;
 }
@@ -45,6 +48,7 @@ export const useReaderStore = create<ReaderState>((set) => ({
   chatOpen: false,
   showOriginal: {},
   searchQuery: "",
+  mounted: false,
 
   load: (docId, document, page) =>
     set({
@@ -81,6 +85,7 @@ export const useReaderStore = create<ReaderState>((set) => ({
   setShowOriginal: (page, show) =>
     set((state) => ({ showOriginal: { ...state.showOriginal, [page]: show } })),
   setSearchQuery: (searchQuery) => set({ searchQuery }),
+  setMounted: (mounted) => set({ mounted }),
   applyAi: (indices, labels, passages) =>
     set((state) => {
       if (!state.document) return state;
