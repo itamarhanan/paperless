@@ -1,6 +1,8 @@
 import { unzipSync } from "fflate";
 import { processHtmlBook } from "./html-processor";
 import type { ProcessedDocument, ReaderSettings } from "./pdf-processor";
+import { byName, escapeHtml, parseXml } from "./formats/xml";
+import type { ZipFiles } from "./formats/types";
 
 /**
  * Reads an EPUB in the browser. An EPUB is a zip of XHTML chapters plus a
@@ -9,16 +11,10 @@ import type { ProcessedDocument, ReaderSettings } from "./pdf-processor";
  * book's italics, quotes and verse. Nothing leaves the device.
  */
 
-type Files = Record<string, Uint8Array>;
+type Files = ZipFiles;
 
 const decoder = new TextDecoder();
 const text = (files: Files, path: string) => (files[path] ? decoder.decode(files[path]) : null);
-
-function parseXml(source: string): Document {
-  const doc = new DOMParser().parseFromString(source, "application/xml");
-  // Some books ship invalid XHTML; the HTML parser forgives what XML doesn't
-  return doc.querySelector("parsererror") ? new DOMParser().parseFromString(source, "text/html") : doc;
-}
 
 /** Resolves an href relative to the file that contains it, inside the zip. */
 function resolve(base: string, href: string): string {
@@ -29,10 +25,6 @@ function resolve(base: string, href: string): string {
   }
   return parts.join("/");
 }
-
-/** Elements by local name, whatever namespace prefix the book uses (dc:title, opf:item…). */
-const byName = (root: ParentNode, name: string) =>
-  [...root.querySelectorAll("*")].filter((el) => el.localName === name);
 
 /** Chapter titles from the book's own contents (EPUB 3 nav or EPUB 2 NCX), first one per file. */
 function contentsTitles(files: Files, opfPath: string, opf: Document): Map<string, string> {
@@ -69,8 +61,6 @@ function contentsTitles(files: Files, opfPath: string, opf: Document): Map<strin
   }
   return titles;
 }
-
-const escapeHtml = (s: string) => s.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
 
 export function processEpub(
   data: ArrayBuffer,

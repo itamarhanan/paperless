@@ -1,35 +1,23 @@
-import { processEpub } from "./epub-processor";
+import { importBytes } from "./formats/registry";
 import { processHtmlBook } from "./html-processor";
-import { MAX_FILE_BYTES, processPdf, titleFromFilename, type ProcessedDocument, type ReaderSettings } from "./pdf-processor";
+import type { ProcessedDocument, ReaderSettings } from "./pdf-processor";
 
 type Progress = (fraction: number) => void;
 
 /**
- * Every way a book gets into the library. Files are read in the browser;
- * links and Gutenberg books are downloaded through the server only because
- * other sites don't allow the browser to fetch them directly.
+ * Every way a book gets into the library. Transports here — files, links,
+ * Gutenberg — only fetch bytes; which format those bytes are is the registry's
+ * decision. Files are read in the browser; links and Gutenberg books are
+ * downloaded through the server only because other sites don't allow the
+ * browser to fetch them directly.
  */
 
-const isZip = (data: ArrayBuffer) => {
-  const head = new Uint8Array(data, 0, 2);
-  return head[0] === 0x50 && head[1] === 0x4b;
-};
-
-async function read(data: ArrayBuffer, settings: ReaderSettings, fallbackTitle: string, onProgress?: Progress) {
-  if (isZip(data)) {
-    onProgress?.(0.5);
-    return processEpub(data, settings, fallbackTitle);
-  }
-  return processPdf(data, settings, { fallbackTitle, onProgress });
-}
-
-/** A PDF or EPUB chosen or dropped by the reader. */
+/** A file chosen or dropped by the reader; the format is sniffed, not assumed. */
 export async function readFile(file: File, settings: ReaderSettings, onProgress?: Progress): Promise<ProcessedDocument> {
-  if (file.size > MAX_FILE_BYTES) throw new Error("This file is larger than 50 MB. Try a smaller file.");
-  return read(await file.arrayBuffer(), settings, titleFromFilename(file.name), onProgress);
+  return importBytes(await file.arrayBuffer(), { name: file.name, settings, onProgress });
 }
 
-/** A direct link to a PDF or EPUB. */
+/** A direct link to one of the supported formats. */
 export async function readUrl(url: string, settings: ReaderSettings, onProgress?: Progress): Promise<ProcessedDocument> {
   onProgress?.(0.05);
   const response = await fetch("/api/fetch-document", {
@@ -40,14 +28,13 @@ export async function readUrl(url: string, settings: ReaderSettings, onProgress?
   if (!response.ok) throw new Error(await errorMessage(response, "Couldn’t download that file."));
   const data = await response.arrayBuffer();
 
-  let fallbackTitle = "Untitled";
+  let name: string | undefined;
   try {
-    const name = decodeURIComponent(new URL(url).pathname.split("/").pop() ?? "");
-    if (name) fallbackTitle = titleFromFilename(name);
+    name = decodeURIComponent(new URL(url).pathname.split("/").pop() ?? "") || undefined;
   } catch {
-    // Keep the default title
+    // The format is sniffer's business, not the link's
   }
-  return read(data, settings, fallbackTitle, (f) => onProgress?.(0.3 + f * 0.7));
+  return importBytes(data, { name, settings, onProgress: (f) => onProgress?.(0.3 + f * 0.7) });
 }
 
 /** A free book from Project Gutenberg, read from its HTML edition. */

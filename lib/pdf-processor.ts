@@ -643,14 +643,6 @@ function titleFromMetadata(info: { Title?: unknown } | undefined): string | null
   return raw;
 }
 
-export function titleFromFilename(name: string): string {
-  return name
-    .replace(/\.(pdf|epub)$/i, "")
-    .replace(/[_]+/g, " ")
-    .replace(/\s+/g, " ")
-    .trim() || "Untitled";
-}
-
 async function extractAndCleanPdfText(
   arrayBuffer: ArrayBuffer,
   settings: ReaderSettings,
@@ -988,8 +980,6 @@ export function findExtras(
   return ranges;
 }
 
-
-export const MAX_FILE_BYTES = 50 * 1024 * 1024;
 
 /** Reads a PDF's text, structure and contents into a document. */
 export function processPdf(
