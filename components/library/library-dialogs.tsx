@@ -56,7 +56,7 @@ function LinkForm({ onSubmit, onCancel }: { onSubmit: (url: string) => void; onC
     >
       <DialogHeader>
         <DialogTitle>Add from link</DialogTitle>
-        <DialogDescription>Paste a direct link to a PDF or EPUB file.</DialogDescription>
+        <DialogDescription>Paste a direct link to a readable file.</DialogDescription>
       </DialogHeader>
       <div className="mt-4">
         <label htmlFor="doc-url" className="sr-only">

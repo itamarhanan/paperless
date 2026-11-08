@@ -49,6 +49,7 @@ import {
   type SavedDocument,
 } from "@/lib/storage";
 import { rememberLibrary } from "@/lib/library-cookie";
+import { ACCEPT, formatLabels, isSupportedFile } from "@/lib/formats/supported";
 import { BookCover } from "@/components/book/book-cover";
 import { removeWithUndo } from "@/lib/remove-with-undo";
 import { timeAgo } from "@/lib/text";
@@ -67,8 +68,6 @@ interface ImportJob {
   error?: string;
   source: { file: File } | { url: string } | { gutenberg: number; title: string };
 }
-
-const ACCEPT = ".pdf,.epub,application/pdf,application/epub+zip";
 
 const SAMPLE = { id: 2680, title: "Meditations" };
 
@@ -153,11 +152,9 @@ export function Library() {
 
   const importFiles = useCallback(
     (files: FileList | File[]) => {
-      const list = [...files].filter(
-        (f) => /\.(pdf|epub)$/i.test(f.name) || /pdf|epub/.test(f.type),
-      );
+      const list = [...files].filter(isSupportedFile);
       if (!list.length) {
-        toast.error("Paperless opens PDF and EPUB files.");
+        toast.error(`Paperless opens ${formatLabels()} files.`);
         return;
       }
       const newJobs = list.map((file) => ({
@@ -466,7 +463,7 @@ export function Library() {
             )}
 
             <p className="mt-8 hidden text-center text-[0.8125rem] text-muted-foreground pointer-fine:block">
-              Drop PDF or EPUB files anywhere to add them.
+              Drop PDF, EPUB or Word files anywhere to add them.
             </p>
           </>
         )}
@@ -503,7 +500,7 @@ export function Library() {
             <Upload className="mb-3 size-8" aria-hidden />
             <p className="text-lg font-semibold">Drop to add to your library</p>
             <p className="text-[0.875rem] text-muted-foreground">
-              PDF or EPUB, up to 50 MB
+              PDF, EPUB or Word, up to 50 MB
             </p>
           </div>
         </div>
@@ -533,7 +530,7 @@ function AddMenu({
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end" className="min-w-52">
         <DropdownMenuItem onSelect={onFile}>
-          <FileText /> Choose PDF or EPUB…
+          <FileText /> Choose a file…
         </DropdownMenuItem>
         <DropdownMenuItem onSelect={onLink}>
           <Link2 /> Add from link…
@@ -687,7 +684,7 @@ function EmptyLibrary({
       />
       <h2 className="text-xl font-semibold">Your library is empty</h2>
       <p className="mt-2 max-w-sm text-muted-foreground">
-        Add a PDF or EPUB and read it as clean, comfortable text. Documents stay
+        Add a PDF, EPUB or Word document and read it as clean, comfortable text. Documents stay
         in this browser.
       </p>
       <div className="mt-8 flex w-full max-w-xs flex-col gap-2">
